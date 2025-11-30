@@ -1,0 +1,16 @@
+clothing_type,category,typical_weight_grams,weight_range_min,weight_range_max,typical_wears,wash_frequency
+t-shirt,tops,175,120,250,50,1.0
+shirt,tops,200,150,300,40,0.5
+blouse,tops,150,100,220,40,0.5
+sweater,tops,500,350,700,40,0.2
+hoodie,tops,600,450,850,40,0.3
+cardigan,tops,450,300,650,40,0.25
+jeans,bottoms,600,450,800,80,0.2
+pants,bottoms,400,300,600,60,0.33
+shorts,bottoms,250,180,350,50,0.5
+skirt,bottoms,300,200,500,40,0.33
+dress,dresses,400,250,700,40,0.5
+jacket,outerwear,750,500,1200,100,0.1
+coat,outerwear,1000,700,1500,100,0.05
+blazer,outerwear,600,450,850,60,0.2
+vest,outerwear,300,200,450,50,0.2

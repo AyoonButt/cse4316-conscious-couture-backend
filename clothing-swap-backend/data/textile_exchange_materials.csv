@@ -1,0 +1,11 @@
+material_name,material_category,co2_per_kg,water_liters_per_kg,energy_mj_per_kg,spinning_multiplier,weaving_multiplier,dyeing_multiplier,finishing_multiplier,production_region,data_quality,last_updated
+cotton_conventional,natural,5.3,10000,55,0.05,0.08,0.25,0.10,Global Average,high,2024-01-15
+cotton_organic,natural,3.7,7000,45,0.05,0.08,0.25,0.10,Global Average,high,2024-01-15
+polyester,synthetic,6.4,52,125,0.05,0.08,0.25,0.10,Global Average,high,2024-01-15
+wool,natural,10.4,6000,63,0.05,0.08,0.25,0.10,Global Average,high,2024-01-15
+viscose,cellulosic,4.2,1200,48,0.05,0.08,0.25,0.10,Global Average,high,2024-01-15
+nylon,synthetic,7.6,70,138,0.05,0.08,0.25,0.10,Global Average,high,2024-01-15
+elastane,synthetic,8.9,85,150,0.05,0.08,0.25,0.10,Global Average,high,2024-01-15
+silk,natural,15.2,3000,78,0.05,0.08,0.25,0.10,Global Average,high,2024-01-15
+linen,natural,2.1,2500,25,0.05,0.08,0.25,0.10,Global Average,high,2024-01-15
+hemp,natural,1.8,2000,22,0.05,0.08,0.25,0.10,Global Average,high,2024-01-15

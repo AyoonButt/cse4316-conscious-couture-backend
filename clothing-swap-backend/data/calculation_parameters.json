@@ -1,0 +1,86 @@
+[
+  {
+    "parameter_name": "replacement_factor",
+    "parameter_value": 0.7,
+    "unit": "ratio",
+    "description": "Proportion of new purchases avoided by reuse (70% of new garments displaced)",
+    "last_updated": "2024-01-15"
+  },
+  {
+    "parameter_name": "manufacturing_multiplier",
+    "parameter_value": 0.15,
+    "unit": "ratio",
+    "description": "Manufacturing impact as percentage of material impact",
+    "last_updated": "2024-01-15"
+  },
+  {
+    "parameter_name": "transport_asia_eu_multiplier",
+    "parameter_value": 0.1,
+    "unit": "ratio",
+    "description": "Transport impact from Asia to EU/US as percentage of material impact",
+    "last_updated": "2024-01-15"
+  },
+  {
+    "parameter_name": "collection_impact_kg",
+    "parameter_value": 0.05,
+    "unit": "kg CO2-eq",
+    "description": "Impact of collection and sorting per garment",
+    "last_updated": "2024-01-15"
+  },
+  {
+    "parameter_name": "platform_transport_kg",
+    "parameter_value": 0.02,
+    "unit": "kg CO2-eq",
+    "description": "Local transport for swap per garment (20km average)",
+    "last_updated": "2024-01-15"
+  },
+  {
+    "parameter_name": "platform_digital_kg",
+    "parameter_value": 0.01,
+    "unit": "kg CO2-eq",
+    "description": "Digital platform operations per transaction",
+    "last_updated": "2024-01-15"
+  },
+  {
+    "parameter_name": "end_of_life_landfill",
+    "parameter_value": 0.1,
+    "unit": "kg CO2-eq per kg garment",
+    "description": "Landfill disposal impact per kg of garment weight",
+    "last_updated": "2024-01-15"
+  },
+  {
+    "parameter_name": "washing_impact_per_cycle",
+    "parameter_value": 0.05,
+    "unit": "kg CO2-eq",
+    "description": "Average washing machine cycle impact",
+    "last_updated": "2024-01-15"
+  },
+  {
+    "parameter_name": "km_per_kg_co2_driving",
+    "parameter_value": 5.26,
+    "unit": "km",
+    "description": "Kilometers driven per kg CO2 equivalent (inverse of 0.19 kg/km)",
+    "last_updated": "2024-01-15"
+  },
+  {
+    "parameter_name": "trees_annual_co2_absorption",
+    "parameter_value": 21.0,
+    "unit": "kg CO2-eq",
+    "description": "CO2 absorbed by one tree per year",
+    "last_updated": "2024-01-15"
+  },
+  {
+    "parameter_name": "smartphone_charge_co2",
+    "parameter_value": 0.008,
+    "unit": "kg CO2-eq",
+    "description": "CO2 per smartphone charge",
+    "last_updated": "2024-01-15"
+  },
+  {
+    "parameter_name": "led_bulb_hour_co2",
+    "parameter_value": 0.00356,
+    "unit": "kg CO2-eq",
+    "description": "CO2 per hour of LED bulb use (10W bulb)",
+    "last_updated": "2024-01-15"
+  }
+]

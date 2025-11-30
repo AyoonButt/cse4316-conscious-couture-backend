@@ -1,0 +1,16 @@
+brand_name,brand_name_normalized,transparency_index_score,transparency_year,publishes_supplier_list,discloses_ghg_emissions,discloses_water_usage,has_living_wage_commitment,has_climate_targets,tier1_suppliers_disclosed,last_updated
+H&M,hm,52,2024,true,true,true,false,true,150,2024-11-01
+Zara,zara,48,2024,false,true,false,false,true,0,2024-11-01
+Patagonia,patagonia,65,2024,true,true,true,true,true,89,2024-11-01
+Nike,nike,54,2024,true,true,true,false,true,412,2024-11-01
+Adidas,adidas,59,2024,true,true,true,true,true,378,2024-11-01
+Uniqlo,uniqlo,42,2024,false,true,false,false,true,0,2024-11-01
+Gap,gap,47,2024,true,true,false,false,true,256,2024-11-01
+Levi's,levis,56,2024,true,true,true,true,true,189,2024-11-01
+The North Face,thenorthface,51,2024,true,true,false,false,true,98,2024-11-01
+Puma,puma,50,2024,true,true,false,false,true,142,2024-11-01
+Shein,shein,12,2024,false,false,false,false,false,0,2024-11-01
+Old Navy,oldnavy,38,2024,false,false,false,false,false,0,2024-11-01
+Ralph Lauren,ralphlauren,45,2024,true,true,false,false,true,78,2024-11-01
+Tommy Hilfiger,tommyhilfiger,49,2024,true,true,false,false,true,134,2024-11-01
+Calvin Klein,calvinklein,46,2024,true,true,false,false,true,112,2024-11-01
