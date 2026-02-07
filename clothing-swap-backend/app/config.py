@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     DEFAULT_REPLACEMENT_FACTOR: float = 0.70
     REUSE_OVERHEAD_CO2_KG: float = 0.08
 
+    STRIPE_SECRET_KEY: str = "sk_test_placeholder"
+    STRIPE_PUBLISHABLE_KEY: str = "pk_test_placeholder"
+    STRIPE_WEBHOOK_SECRET: str = "whsec_placeholder"
+
     @property
     def allowed_origins_list(self) -> List[str]:
         return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]

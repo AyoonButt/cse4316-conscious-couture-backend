@@ -1,0 +1,25 @@
+# app/models/payment.py
+# SQLAlchemy model for Payment
+
+from sqlalchemy import Column, Integer, String, ForeignKey, Numeric, DateTime
+from sqlalchemy.sql import func
+from app.database import Base
+
+class Payment(Base):
+    __tablename__ = "payments"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    transaction_id = Column(Integer, nullable=False)
+
+    transaction_type = Column(String(50), default="purchase", nullable=False)
+
+    stripe_payment_intent_id = Column(String, unique=True, index=True, nullable=False)
+
+    amount = Column(Numeric(10, 2), nullable=False)
+    currency = Column(String(3), default="usd", nullable=False)
+
+    status = Column(String, nullable=False)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())

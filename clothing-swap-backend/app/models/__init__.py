@@ -10,6 +10,8 @@ from .impact import ClothingEnvironmentalImpact, SwapEnvironmentalImpact
 from .statistics import UserImpactStatistics, PlatformImpactStatistics
 from .data_quality import DataQualityTracking
 
+from .payment import Payment
+
 # Make all models available for import
 __all__ = [
     # Phase 1: Reference Data Models
@@ -31,5 +33,8 @@ __all__ = [
     'SwapEnvironmentalImpact',
     'UserImpactStatistics',
     'PlatformImpactStatistics',
-    'DataQualityTracking'
+    'DataQualityTracking',
+
+    # Phase 5: Payment Models
+    'Payment',
 ]

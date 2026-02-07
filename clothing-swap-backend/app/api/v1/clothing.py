@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from typing import List, Optional
+from decimal import Decimal
 import math
 
 from ...database import get_db
@@ -14,6 +15,7 @@ from ...schemas.clothing import (
     ClothingItemResponse,
     ClothingItemList,
 )
+from ...services.payment import create_payment
 
 router = APIRouter()
 
@@ -208,3 +210,62 @@ async def get_clothing_sizes(db: Session = Depends(get_db)):
     
     sizes = db.query(ClothingItem.size).distinct().all()
     return [item[0] for item in sizes if item[0]]
+
+
+@router.post("/{clothing_id}/purchase")
+async def purchase_clothing_item(
+    clothing_id: int,
+    buyer_user_id: int,
+    amount: Decimal,
+    db: Session = Depends(get_db)
+):
+    """
+    Initiate a payment for purchasing a clothing item.
+    
+    Returns payment details needed for Stripe payment processing on frontend.
+    """
+    
+    # 1) Find clothing item
+    clothing_item = db.query(ClothingItem).filter(ClothingItem.clothing_id == clothing_id).first()
+    if not clothing_item:
+        raise HTTPException(status_code=404, detail="Clothing item not found")
+    
+    # 2) Verify item is available for purchase
+    if clothing_item.status != "available":
+        raise HTTPException(status_code=400, detail=f"Item is not available (status: {clothing_item.status})")
+    
+    # 3) Verify buyer exists
+    buyer = db.query(User).filter(User.user_id == buyer_user_id).first()
+    if not buyer:
+        raise HTTPException(status_code=404, detail="Buyer user not found")
+    
+    # 4) Prevent buying own item
+    if clothing_item.owner_user_id == buyer_user_id:
+        raise HTTPException(status_code=400, detail="Cannot purchase your own items")
+    
+    # 5) Validate amount is positive
+    if amount <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be greater than 0")
+    
+    # 6) Create payment for clothing purchase
+    # Note: We use clothing_id as the transaction identifier in payment metadata
+    try:
+        payment, client_secret = create_payment(
+            db,
+            transaction_id=clothing_id,
+            amount=amount,
+            currency="usd",
+        )
+    except HTTPException as e:
+        raise e
+    
+    # 7) Return payment details for frontend
+    return {
+        "clothing_id": clothing_id,
+        "buyer_user_id": buyer_user_id,
+        "payment_id": payment.id,
+        "payment_status": payment.status,
+        "client_secret": client_secret,
+        "amount": str(amount),
+        "currency": "usd"
+    }
