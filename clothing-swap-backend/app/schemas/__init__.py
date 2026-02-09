@@ -6,6 +6,14 @@ from .clothing import (
     ClothingItemList,
     ClothingItemFilter,
 )
+from .sustainability import (
+    SustainabilityEquivalents,
+    NewItemImpact,
+    ReuseImpact,
+    AvoidedImpact,
+    BrandContext,
+    SustainabilityMetricsResponse,
+)
 
 __all__ = [
     "ClothingItemBase",
@@ -14,4 +22,10 @@ __all__ = [
     "ClothingItemResponse",
     "ClothingItemList",
     "ClothingItemFilter",
+    "SustainabilityEquivalents",
+    "NewItemImpact",
+    "ReuseImpact",
+    "AvoidedImpact",
+    "BrandContext",
+    "SustainabilityMetricsResponse",
 ]
