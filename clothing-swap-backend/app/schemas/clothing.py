@@ -14,6 +14,7 @@ class ClothingItemBase(BaseModel):
     weight_grams: Optional[int] = Field(None, description="Weight in grams")
     primary_image_url: Optional[str] = Field(None, description="URL of primary image")
     additional_images: Optional[List[str]] = Field(default_factory=list, description="List of additional image URLs")
+    sell_price: Optional[float] = Field(None, description="Optional selling price in USD", ge=0)
 
 
 class ClothingItemCreate(ClothingItemBase):
@@ -32,6 +33,7 @@ class ClothingItemUpdate(BaseModel):
     primary_image_url: Optional[str] = None
     additional_images: Optional[List[str]] = None
     status: Optional[str] = None
+    sell_price: Optional[float] = Field(None, ge=0)
 
 
 class ClothingItemResponse(ClothingItemBase):
@@ -43,6 +45,7 @@ class ClothingItemResponse(ClothingItemBase):
     weight_estimated: bool = True
     status: str = "available"
     times_swapped: int = 0
+    sell_price: Optional[float] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
@@ -68,3 +71,6 @@ class ClothingItemFilter(BaseModel):
     search: Optional[str] = None
     min_times_swapped: Optional[int] = None
     max_times_swapped: Optional[int] = None
+    min_price: Optional[float] = None
+    max_price: Optional[float] = None
+    for_sale: Optional[bool] = None

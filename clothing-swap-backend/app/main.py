@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 
 from .config import settings
 from .database import init_db
-from .api.v1 import auth, users, clothing, materials, brands, swaps, impact, stats, payment
+from .api.v1 import auth, users, clothing, materials, brands, swaps, impact, stats, sales, payment
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ app.include_router(brands.router, prefix="/api/v1/brands", tags=["brands"])
 app.include_router(swaps.router, prefix="/api/v1/swaps", tags=["swaps"])
 app.include_router(impact.router, prefix="/api/v1/impact", tags=["impact"])
 app.include_router(stats.router, prefix="/api/v1/stats", tags=["stats"])
-
+app.include_router(sales.router, prefix="/api/v1/sales", tags=["sales"])
 app.include_router(payment.router, prefix="/api/v1/payment", tags=["payment"])
 
 
