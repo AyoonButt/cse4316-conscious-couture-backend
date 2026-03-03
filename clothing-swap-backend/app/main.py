@@ -4,6 +4,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
+from app.routes.auth import router
 
 from .config import settings
 from .database import init_db
@@ -59,7 +60,7 @@ async def health_check():
     return {"status": "healthy"}
 
 
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
+app.include_router(router, prefix="/api/v1/auth", tags=["authentication"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 app.include_router(clothing.router, prefix="/api/v1/clothing", tags=["clothing"])
 app.include_router(materials.router, prefix="/api/v1/materials", tags=["materials"])
