@@ -14,7 +14,8 @@ class Payment(Base):
 
     transaction_type = Column(String(50), default="purchase", nullable=False)
 
-    stripe_payment_intent_id = Column(String, unique=True, index=True, nullable=False)
+    # Allow null/temporary values before a real Stripe PaymentIntent ID is available
+    stripe_payment_intent_id = Column(String, index=True, nullable=True)
 
     amount = Column(Numeric(10, 2), nullable=False)
     currency = Column(String(3), default="usd", nullable=False)

@@ -4,14 +4,33 @@ from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.schemas.payment import PaymentCreateRequest, PaymentCreateResponse, PaymentStatusResponse
+from app.schemas.payment import (
+    PaymentCreateRequest, 
+    PaymentCreateResponse, 
+    PaymentStatusResponse,
+    CardVerificationRequest,
+    CardVerificationResponse,
+)
 from app.services.payment import (
     create_payment,
     handle_stripe_webhook,
     get_payment_status,
+    verify_card,
 )
 
-router = APIRouter(prefix="/payments", tags=["payments"])
+router = APIRouter(tags=["payments"])
+
+
+@router.post("/verify-card", response_model=CardVerificationResponse)
+def verify_card_endpoint(payload: CardVerificationRequest) -> CardVerificationResponse:
+    """
+    Verify a Stripe PaymentMethod without creating a charge.
+    The frontend should create a PaymentMethod using Stripe.js/Elements,
+    then send the payment_method_id to this endpoint for verification.
+    """
+    result = verify_card(payment_method_id=payload.payment_method_id)
+    return CardVerificationResponse(**result)
+
 
 
 @router.post("/create", response_model=PaymentCreateResponse)
