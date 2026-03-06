@@ -1,4 +1,4 @@
-from . import auth, users, clothing, materials, brands, swaps, impact, stats, payment
+from . import auth, users, clothing, materials, brands, swaps, impact, stats, payment, shipping
 
 __all__ = [
     "auth",
@@ -9,5 +9,6 @@ __all__ = [
     "swaps",
     "impact",
     "stats",
-    "payment"
+    "payment",
+    "shipping"
 ]

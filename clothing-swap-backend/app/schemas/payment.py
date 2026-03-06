@@ -23,3 +23,16 @@ class PaymentStatusResponse(BaseModel):
     amount: Decimal
     currency: str
     status: str
+
+
+class CardVerificationRequest(BaseModel):
+    payment_method_id: str = Field(..., description="Stripe PaymentMethod ID from frontend (e.g., pm_xxx)")
+
+
+class CardVerificationResponse(BaseModel):
+    valid: bool
+    card_brand: Optional[str] = None
+    last4: Optional[str] = None
+    exp_month: Optional[int] = None
+    exp_year: Optional[int] = None
+    errors: Optional[list[str]] = None

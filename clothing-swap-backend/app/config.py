@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings
 from typing import List
-import os
+import os, stripe
 
 
 class Settings(BaseSettings):
@@ -22,9 +22,24 @@ class Settings(BaseSettings):
     DEFAULT_REPLACEMENT_FACTOR: float = 0.70
     REUSE_OVERHEAD_CO2_KG: float = 0.08
 
-    STRIPE_SECRET_KEY: str = "sk_test_placeholder"
-    STRIPE_PUBLISHABLE_KEY: str = "pk_test_placeholder"
-    STRIPE_WEBHOOK_SECRET: str = "whsec_placeholder"
+    # Stripe configuration - Pydantic will load these from .env file
+    STRIPE_SECRET_KEY: str
+    STRIPE_PUBLISHABLE_KEY: str
+    STRIPE_WEBHOOK_SECRET: str
+
+    # ShipStation configuration - Pydantic will load these from .env file
+    SHIPSTATION_API_KEY: str
+    SHIPSTATION_API_SECRET: str
+
+    # ShipEngine configuration
+    SHIPENGINE_API_KEY: str
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Set stripe API key after settings are loaded
+        stripe.api_key = self.STRIPE_SECRET_KEY
+        if not stripe.api_key:
+            print("Warning: STRIPE_SECRET_KEY is not set")
 
     @property
     def allowed_origins_list(self) -> List[str]:

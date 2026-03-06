@@ -62,6 +62,8 @@ def create_payment(
     Returns: (Payment db row, client_secret)
     """
 
+    # 1) Validate item exists and is available
+    # prevent duplicate payments for same swap (simple rule)
     # 1) Validate sale exists and is in valid state for payment
     sale = db.query(Sale).filter(Sale.sale_id == sale_id).first()
     if not sale:
@@ -85,6 +87,9 @@ def create_payment(
         .first()
     )
     if existing and existing.status in {"succeeded", "processing", "requires_action", "requires_payment_method"}:
+        # - return existing client_secret (requires storing it; not recommended)
+        # - block duplicates
+        raise HTTPException(status_code=400, detail="Payment already exists for this swap")
         raise HTTPException(status_code=400, detail="Payment already exists for this sale")
 
     # 3) Create local payment row first (so we can store payment_id in Stripe metadata)
@@ -94,6 +99,9 @@ def create_payment(
         transaction_type="purchase",
         amount=amount,
         currency=currency.lower(),
+        status="created",  # local status before Stripe response
+        # Use empty string to satisfy existing DB schema (NOT NULL) until DB is migrated
+        stripe_payment_intent_id="",
         status="created",
         stripe_payment_intent_id="pending",
     )
@@ -138,7 +146,7 @@ async def handle_stripe_webhook(db: Session, request: Request) -> None:
     """
 
     payload = await request.body()
-    sig_header = request.headers.get("stripe-signature")
+    sig_header = request.headers.get("Stripe-Signature")
     if not sig_header:
         raise HTTPException(status_code=400, detail="Missing Stripe-Signature header")
 
@@ -235,3 +243,79 @@ def get_payment_status(
             pass
     
     return payment
+
+
+def verify_card(payment_method_id: str) -> dict:
+    """
+    Validates a Stripe PaymentMethod to verify the card is valid.
+    The PaymentMethod should be created on the frontend using Stripe.js/Elements.
+    
+    Args:
+        payment_method_id: Stripe PaymentMethod ID (e.g., pm_xxx)
+    
+    Returns: Dict with validation result and card info
+    """
+    try:
+        # Retrieve the PaymentMethod from Stripe
+        payment_method = stripe.PaymentMethod.retrieve(payment_method_id)
+        
+        # Check if it's a card payment method
+        if payment_method.type != "card":
+            return {
+                "valid": False,
+                "card_brand": None,
+                "last4": None,
+                "exp_month": None,
+                "exp_year": None,
+                "errors": ["Payment method is not a card"],
+            }
+        
+        # Get card details
+        card_info = payment_method.get("card", {})
+        
+        # Additional validation: check if card is expired
+        exp_month = card_info.get("exp_month")
+        exp_year = card_info.get("exp_year")
+        
+        from datetime import datetime
+        current_date = datetime.now()
+        if exp_year < current_date.year or (exp_year == current_date.year and exp_month < current_date.month):
+            return {
+                "valid": False,
+                "card_brand": card_info.get("brand"),
+                "last4": card_info.get("last4"),
+                "exp_month": exp_month,
+                "exp_year": exp_year,
+                "errors": ["Card is expired"],
+            }
+        
+        return {
+            "valid": True,
+            "card_brand": card_info.get("brand"),
+            "last4": card_info.get("last4"),
+            "exp_month": exp_month,
+            "exp_year": exp_year,
+            "errors": None,
+        }
+        
+    except stripe.error.InvalidRequestError as e:
+        # Invalid payment method ID or not found
+        return {
+            "valid": False,
+            "card_brand": None,
+            "last4": None,
+            "exp_month": None,
+            "exp_year": None,
+            "errors": [f"Invalid payment method: {str(e)}"],
+        }
+        
+    except stripe.error.StripeError as e:
+        # Other Stripe errors
+        return {
+            "valid": False,
+            "card_brand": None,
+            "last4": None,
+            "exp_month": None,
+            "exp_year": None,
+            "errors": [f"Card verification error: {str(e)}"],
+        }
