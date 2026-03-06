@@ -27,6 +27,10 @@ class User(Base):
     impact_points = Column(Integer, default=0)
     badges = Column(JSON, default=lambda: [])
 
+    # Sales tracking
+    total_sales = Column(Integer, default=0)
+    total_purchases = Column(Integer, default=0)
+
     # Privacy Settings
     profile_public = Column(Boolean, default=True)
     share_stats = Column(Boolean, default=True)
@@ -40,6 +44,8 @@ class User(Base):
     statistics = relationship('UserImpactStatistics', back_populates='user', uselist=False)
     swaps_initiated = relationship('Swap', foreign_keys='Swap.user1_id', back_populates='user1')
     swaps_received = relationship('Swap', foreign_keys='Swap.user2_id', back_populates='user2')
+    sales_as_seller = relationship('Sale', foreign_keys='Sale.seller_id', back_populates='seller')
+    sales_as_buyer = relationship('Sale', foreign_keys='Sale.buyer_id', back_populates='buyer')
 
     # Indexes
     __table_args__ = (
@@ -63,6 +69,8 @@ class User(Base):
             'total_swaps': self.total_swaps,
             'impact_points': self.impact_points,
             'badges': self.badges,
+            'total_sales': self.total_sales,
+            'total_purchases': self.total_purchases,
             'profile_public': self.profile_public,
             'share_stats': self.share_stats,
             'created_at': self.created_at.isoformat() if self.created_at else None,

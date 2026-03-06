@@ -1,13 +1,11 @@
-
 from pydantic import BaseModel, Field
 from typing import Optional
 from decimal import Decimal
 
 
 class PaymentCreateRequest(BaseModel):
-    clothing_id: int = Field(..., gt=0, description="ID of the clothing item being purchased")
-    buyer_user_id: int = Field(..., gt=0, description="ID of the buyer")
-    amount: Decimal = Field(..., gt=0, description="Purchase amount in USD")
+    sale_id: int = Field(..., gt=0, description="ID of the sale to process payment for")
+    amount: Optional[Decimal] = Field(None, gt=0, description="Purchase amount (optional, defaults to sale price)")
 
 
 class PaymentCreateResponse(BaseModel):
@@ -18,7 +16,8 @@ class PaymentCreateResponse(BaseModel):
 
 class PaymentStatusResponse(BaseModel):
     payment_id: int
-    transaction_id: int
+    sale_id: Optional[int] = None
+    transaction_id: Optional[int] = None  # Deprecated, use sale_id
     transaction_type: str
     stripe_payment_intent_id: Optional[str] = None
     amount: Decimal

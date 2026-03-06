@@ -6,6 +6,7 @@ from .user import User
 from .brand import BrandSustainability
 from .clothing import ClothingItem, MaterialCompositionContribution
 from .swap import Swap
+from .sale import Sale
 from .impact import ClothingEnvironmentalImpact, SwapEnvironmentalImpact
 from .statistics import UserImpactStatistics, PlatformImpactStatistics
 from .data_quality import DataQualityTracking
@@ -27,6 +28,7 @@ __all__ = [
     'ClothingItem',
     'MaterialCompositionContribution',
     'Swap',
+    'Sale',
     
     # Phase 4: Impact Calculation Models
     'ClothingEnvironmentalImpact',

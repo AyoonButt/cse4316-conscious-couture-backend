@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from decimal import Decimal
 from typing import Optional, Tuple
 
@@ -11,6 +12,7 @@ from fastapi import Request, HTTPException
 
 from app.config import settings
 from app.models.payment import Payment
+from app.models.sale import Sale
 
 
 # Configure Stripe once at import time
@@ -29,12 +31,12 @@ def _to_stripe_amount_cents(amount: Decimal) -> int:
     return cents
 
 
-def _payment_metadata(transaction_id: int, payment_id: int) -> dict:
+def _payment_metadata(sale_id: int, payment_id: int) -> dict:
     """
     Metadata is helpful so webhook can map back to your DB rows.
     """
     return {
-        "transaction_id": str(transaction_id),
+        "sale_id": str(sale_id),
         "payment_id": str(payment_id),
     }
 
@@ -44,27 +46,43 @@ def _payment_metadata(transaction_id: int, payment_id: int) -> dict:
 def create_payment(
     db: Session,
     *,
-    transaction_id: int,
-    amount: Decimal,
+    sale_id: int,
+    amount: Optional[Decimal] = None,
     currency: str = "usd",
 ) -> Tuple[Payment, str]:
     """
     Creates a Payment row in your DB + creates a Stripe PaymentIntent.
-    
+
     Args:
         db: Database session
-        transaction_id: ID of the item being purchased (clothing_id)
-        amount: Purchase amount as Decimal
+        sale_id: ID of the sale to process payment for
+        amount: Purchase amount as Decimal (optional, defaults to sale price)
         currency: Currency code (default: "usd")
-    
+
     Returns: (Payment db row, client_secret)
     """
 
     # 1) Validate item exists and is available
     # prevent duplicate payments for same swap (simple rule)
+    # 1) Validate sale exists and is in valid state for payment
+    sale = db.query(Sale).filter(Sale.sale_id == sale_id).first()
+    if not sale:
+        raise HTTPException(status_code=404, detail="Sale not found")
+
+    if sale.status != "pending":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot create payment for sale with status '{sale.status}'. Sale must be 'pending'."
+        )
+
+    # Use sale price if amount not provided
+    if amount is None:
+        amount = Decimal(str(sale.sale_price))
+
+    # 2) Prevent duplicate payments for same sale
     existing = (
         db.query(Payment)
-        .filter(Payment.transaction_id == transaction_id)
+        .filter(Payment.sale_id == sale_id)
         .order_by(Payment.id.desc())
         .first()
     )
@@ -72,41 +90,43 @@ def create_payment(
         # - return existing client_secret (requires storing it; not recommended)
         # - block duplicates
         raise HTTPException(status_code=400, detail="Payment already exists for this swap")
+        raise HTTPException(status_code=400, detail="Payment already exists for this sale")
 
-    # 2) Create local payment row first (so we can store payment_id in Stripe metadata)
+    # 3) Create local payment row first (so we can store payment_id in Stripe metadata)
     payment = Payment(
-        transaction_id=transaction_id,
+        sale_id=sale_id,
+        transaction_id=sale.clothing_id,  # Keep for backwards compatibility
         transaction_type="purchase",
         amount=amount,
         currency=currency.lower(),
         status="created",  # local status before Stripe response
         # Use empty string to satisfy existing DB schema (NOT NULL) until DB is migrated
         stripe_payment_intent_id="",
+        status="created",
+        stripe_payment_intent_id="pending",
     )
     db.add(payment)
     db.commit()
     db.refresh(payment)
 
-    # 3) Create Stripe PaymentIntent
+    # 4) Create Stripe PaymentIntent
     try:
         intent = stripe.PaymentIntent.create(
             amount=_to_stripe_amount_cents(amount),
             currency=currency.lower(),
-            # enable automatic payment methods (nice default)
             automatic_payment_methods={"enabled": True},
-            metadata=_payment_metadata(transaction_id=transaction_id, payment_id=payment.id),
+            metadata=_payment_metadata(sale_id=sale_id, payment_id=payment.id),
         )
     except stripe.error.StripeError as e:
-        # Roll back payment row or mark it failed
         payment.status = "failed"
         payment.stripe_payment_intent_id = "error"
         db.add(payment)
         db.commit()
         raise HTTPException(status_code=502, detail=f"Stripe error: {getattr(e, 'user_message', str(e))}")
 
-    # 4) Persist Stripe IDs + initial status
+    # 5) Persist Stripe IDs + initial status
     payment.stripe_payment_intent_id = intent.id
-    payment.status = intent.status  # e.g. requires_payment_method
+    payment.status = intent.status
     db.add(payment)
     db.commit()
     db.refresh(payment)
@@ -121,6 +141,7 @@ def create_payment(
 async def handle_stripe_webhook(db: Session, request: Request) -> None:
     """
     Verifies Stripe signature, parses event, updates DB status.
+    Syncs payment status with linked Sale record.
     This function raises HTTPException on validation errors.
     """
 
@@ -150,20 +171,42 @@ async def handle_stripe_webhook(db: Session, request: Request) -> None:
 
         payment = db.query(Payment).filter(Payment.stripe_payment_intent_id == intent_id).first()
 
-        # If we can't find it, we can ignore or log.
-        # In production you'd log for investigation.
         if not payment:
             return
 
         # Update payment status
+        old_status = payment.status
         payment.status = intent_status
         db.add(payment)
+
+        # Sync with Sale when payment succeeds
+        if intent_status == "succeeded" and old_status != "succeeded":
+            _sync_sale_on_payment_success(db, payment)
 
         db.commit()
         return
 
     # Ignore other event types (or add more handlers as you grow)
     return
+
+
+def _sync_sale_on_payment_success(db: Session, payment: Payment) -> None:
+    """
+    Updates the linked Sale record when payment succeeds.
+    Sets status to 'payment_received' and records payment_date.
+    """
+    if not payment.sale_id:
+        return
+
+    sale = db.query(Sale).filter(Sale.sale_id == payment.sale_id).first()
+    if not sale:
+        return
+
+    # Only update if sale is still pending
+    if sale.status == "pending":
+        sale.status = "payment_received"
+        sale.payment_date = datetime.utcnow()
+        db.add(sale)
 
 
 def get_payment_status(

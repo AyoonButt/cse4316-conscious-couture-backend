@@ -40,7 +40,7 @@ def create_payment_endpoint(
 ):
     payment, client_secret = create_payment(
         db,
-        transaction_id=payload.clothing_id,
+        sale_id=payload.sale_id,
         amount=payload.amount,
     )
 
@@ -58,11 +58,12 @@ def get_payment_status_endpoint(
 ):
     if payment_id <= 0:
         raise HTTPException(status_code=400, detail="Invalid payment_id")
-    
+
     payment = get_payment_status(db, payment_id)
-    
+
     return PaymentStatusResponse(
         payment_id=payment.id,
+        sale_id=payment.sale_id,
         transaction_id=payment.transaction_id,
         transaction_type=payment.transaction_type,
         stripe_payment_intent_id=payment.stripe_payment_intent_id,

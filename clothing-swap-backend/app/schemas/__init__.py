@@ -14,6 +14,15 @@ from .sustainability import (
     BrandContext,
     SustainabilityMetricsResponse,
 )
+from .sale import (
+    SaleCreate,
+    SaleUpdate,
+    SaleStatusUpdate,
+    SaleCancelRequest,
+    SaleResponse,
+    SaleList,
+    SaleFilter,
+)
 
 __all__ = [
     "ClothingItemBase",
@@ -28,4 +37,11 @@ __all__ = [
     "AvoidedImpact",
     "BrandContext",
     "SustainabilityMetricsResponse",
+    "SaleCreate",
+    "SaleUpdate",
+    "SaleStatusUpdate",
+    "SaleCancelRequest",
+    "SaleResponse",
+    "SaleList",
+    "SaleFilter",
 ]

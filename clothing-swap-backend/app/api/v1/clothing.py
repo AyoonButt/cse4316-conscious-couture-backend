@@ -133,6 +133,7 @@ async def create_clothing_item(
         weight_grams=clothing_data.weight_grams,
         primary_image_url=clothing_data.primary_image_url,
         additional_images=clothing_data.additional_images or [],
+        sell_price=clothing_data.sell_price,
         status="available"
     )
     

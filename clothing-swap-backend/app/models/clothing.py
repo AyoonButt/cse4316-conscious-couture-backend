@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Index, JSON, ForeignKey, CheckConstraint
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Index, JSON, ForeignKey, CheckConstraint, Numeric
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from ..database import Base
@@ -34,6 +34,9 @@ class ClothingItem(Base):
     status = Column(String(20), default='available', index=True)
     times_swapped = Column(Integer, default=0)
 
+    # Selling
+    sell_price = Column(Numeric(10, 2), nullable=True)  # Optional price in USD
+
     # Photos
     primary_image_url = Column(String(255))
     additional_images = Column(JSON)
@@ -49,6 +52,7 @@ class ClothingItem(Base):
     composition_contributions = relationship('MaterialCompositionContribution', back_populates='clothing_item', cascade='all, delete-orphan')
     swaps_as_item1 = relationship('Swap', foreign_keys='Swap.user1_clothing_id', back_populates='user1_clothing')
     swaps_as_item2 = relationship('Swap', foreign_keys='Swap.user2_clothing_id', back_populates='user2_clothing')
+    sales = relationship('Sale', back_populates='clothing')
 
     # Indexes and Constraints
     __table_args__ = (
@@ -83,6 +87,7 @@ class ClothingItem(Base):
             'weight_estimated': self.weight_estimated,
             'status': self.status,
             'times_swapped': self.times_swapped,
+            'sell_price': float(self.sell_price) if self.sell_price else None,
             'primary_image_url': self.primary_image_url,
             'additional_images': self.additional_images,
             'created_at': self.created_at.isoformat() if self.created_at else None,
