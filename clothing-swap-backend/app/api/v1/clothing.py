@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from typing import List, Optional
@@ -19,6 +19,7 @@ from ...schemas.clothing import (
 )
 from ...services.payment import create_payment
 from ...schemas.sustainability import SustainabilityMetricsResponse, SwapImpactResponse
+from .users import get_current_user
 
 router = APIRouter()
 
@@ -101,15 +102,9 @@ async def get_clothing_item(clothing_id: int, db: Session = Depends(get_db)):
 @router.post("/", response_model=ClothingItemResponse)
 async def create_clothing_item(
     clothing_data: ClothingItemCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user_id = Depends(get_current_user)
 ):
-    """Create a new clothing item."""
-    
-    # Verify the owner user exists
-    user = db.query(User).filter(User.user_id == clothing_data.owner_user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Owner user not found")
-    
     # Look up brand_id if brand is provided
     brand_id = None
     if clothing_data.brand:
@@ -121,7 +116,8 @@ async def create_clothing_item(
     
     # Create the clothing item
     db_clothing_item = ClothingItem(
-        owner_user_id=clothing_data.owner_user_id,
+        # owner_user_id=clothing_data.owner_user_id,
+        owner_user_id=user_id,
         clothing_type=clothing_data.clothing_type,
         brand=clothing_data.brand,
         brand_id=brand_id,
