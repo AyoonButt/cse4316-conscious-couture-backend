@@ -4,8 +4,29 @@ from ...database import get_db
 from ...models.user import User
 from ...schemas.create_user import UserCreate,SignIn
 import hashlib
+from jose import jwt, JWTError
+from datetime import datetime, timedelta, timezone
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
+SECRET_KEY = "secret"
+ALGORITHM = "HS256"
+security = HTTPBearer()
 router = APIRouter()
+
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    # verifies the user is logged in, if not, throws error
+    print("TOKEN RECEIVED:", token)
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        print("PAYLOAD:", payload)
+        user_id = payload.get("user_id")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="No user id, please log in")
+        return user_id
+
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 def hash_password(password):
     return hashlib.sha256(password.encode("utf-8")).hexdigest()
@@ -22,7 +43,15 @@ async def signin(user_info: SignIn, db: Session = Depends(get_db)):
     exist = db.query(User).filter(User.email == email).first()
     if not exist or hashedpassword!=exist.password_hash:
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    token_data = {
+        "user_id": exist.user_id,
+        "exp": datetime.now(timezone.utc) + timedelta(hours=2)
+    }
+
+    token = jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
     return {
+        "access_token": token,
+        "token_type": "bearer",
         "message": "Login successfully",
         "user": {
             "id": exist.user_id,
@@ -51,9 +80,23 @@ async def create_user_signup(user_info: UserCreate,db: Session = Depends(get_db)
     db.add(make_user)
     db.commit()
     db.refresh(make_user)
+
+    token_data = {
+        "user_id": make_user.user_id,
+        "exp": datetime.now(timezone.utc) + timedelta(hours=2)
+    }
+    token = jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
+
     return {
         "message": "Account created successfully",
-        "user": make_user.to_dict()
+        # "user": make_user.to_dict()
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id": make_user.user_id,
+            "email": make_user.email,
+            "name": make_user.display_name
+        }
     }
 
 
@@ -66,8 +109,24 @@ async def create_user_google(payload: dict = Body(...), db : Session = Depends(g
     # see if the user is already created
     exist = db.query(User).filter(User.email == goog_email).first()
     if exist:
-        print("Already exists")
-        return exist.to_dict()
+        user = exist
+        token_data = {
+            "user_id": user.user_id,
+            "exp": datetime.now(timezone.utc) + timedelta(hours=2)
+        }
+        token = jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
+
+        print("Logged in from Google")
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "message": "Login successfully from Google",
+            "user": {
+                "id": user.user_id,
+                "email": user.email,
+                "name": user.display_name,
+            }
+        }
     # print("TYPE OF PASSWORD:", type(user.password))
     # print("PASSWORD VALUE:", user.password)
     # print("PASSWORD LENGTH:", len(user.password))
