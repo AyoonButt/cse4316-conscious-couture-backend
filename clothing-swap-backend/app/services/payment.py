@@ -99,7 +99,8 @@ def create_payment(
         transaction_type="purchase",
         amount=amount,
         currency=currency.lower(),
-        status="created",
+        status="created",  # local status before Stripe response
+        # Use empty string to satisfy existing DB schema (NOT NULL) until DB is migrated
         stripe_payment_intent_id="pending",
     )
     db.add(payment)
