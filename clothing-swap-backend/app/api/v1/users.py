@@ -7,6 +7,7 @@ import hashlib
 from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from ...models.clothing import ClothingItem
 
 SECRET_KEY = "secret"
 ALGORITHM = "HS256"
@@ -27,6 +28,16 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
 
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+@router.get("/{clothing_id}")
+def get_name_for_item(clothing_id: int, db: Session = Depends(get_db)):
+    clothing_item = db.query(ClothingItem).filter(ClothingItem.clothing_id == clothing_id).first()
+    if not clothing_item:
+        raise HTTPException(status_code=401, detail="Clothing item not found")
+    exist = db.query(User).filter(User.user_id == clothing_item.owner_user_id).first()
+    if not exist:
+        raise HTTPException(status_code=401, detail="User id not found")
+    return {"name": exist.display_name}
+
 
 def hash_password(password):
     return hashlib.sha256(password.encode("utf-8")).hexdigest()
