@@ -24,6 +24,14 @@ from .sale import (
     SaleFilter,
 )
 
+from .review import (
+    ReviewCreate,
+    ReviewUpdate,
+    ReviewResponse,
+    ReviewSummary,
+    ReviewList,
+)
+
 __all__ = [
     "ClothingItemBase",
     "ClothingItemCreate", 
@@ -44,4 +52,9 @@ __all__ = [
     "SaleResponse",
     "SaleList",
     "SaleFilter",
+    "ReviewCreate",
+    "ReviewUpdate",
+    "ReviewResponse",
+    "ReviewSummary",
+    "ReviewList",
 ]

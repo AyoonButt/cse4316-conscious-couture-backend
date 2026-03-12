@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from sqlalchemy import Column, Integer, String, Date, DateTime, Boolean, Index, JSON
+from sqlalchemy import Column, Integer, String, Date, DateTime, Boolean, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from ..database import Base
@@ -46,12 +46,8 @@ class User(Base):
     swaps_received = relationship('Swap', foreign_keys='Swap.user2_id', back_populates='user2')
     sales_as_seller = relationship('Sale', foreign_keys='Sale.seller_id', back_populates='seller')
     sales_as_buyer = relationship('Sale', foreign_keys='Sale.buyer_id', back_populates='buyer')
+    reviews_written = relationship('Review', back_populates='reviewer', cascade='all, delete-orphan')
 
-    # Indexes
-    __table_args__ = (
-        Index('ix_users_username', 'username'),
-        Index('ix_users_email', 'email'),
-    )
 
     def __repr__(self):
         return f"<User(username='{self.username}', email='{self.email}')>"

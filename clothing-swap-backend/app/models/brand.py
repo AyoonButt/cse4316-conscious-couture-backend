@@ -45,13 +45,6 @@ class BrandSustainability(Base):
 
     # Relationships
     clothing_items = relationship('ClothingItem', back_populates='brand_info')
-
-    # Indexes
-    __table_args__ = (
-        Index('ix_brands_brand_name', 'brand_name'),
-        Index('ix_brands_brand_name_normalized', 'brand_name_normalized'),
-    )
-
     def __repr__(self):
         return f"<BrandSustainability(brand_name='{self.brand_name}', " \
                f"transparency_index_score={self.transparency_index_score})>"
