@@ -18,3 +18,5 @@ stripe==14.3.0
 
 # For ShipStation shipping labels
 shipstation==0.1.3
+
+google-auth

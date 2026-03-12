@@ -26,10 +26,6 @@ class ClothingTypeReference(Base):
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
-    # Indexes
-    __table_args__ = (
-        Index('ix_clothing_type', 'clothing_type'),
-    )
 
     def __repr__(self):
         return f"<ClothingTypeReference(clothing_type='{self.clothing_type}', " \

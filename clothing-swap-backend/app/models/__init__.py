@@ -10,7 +10,7 @@ from .sale import Sale
 from .impact import ClothingEnvironmentalImpact, SwapEnvironmentalImpact
 from .statistics import UserImpactStatistics, PlatformImpactStatistics
 from .data_quality import DataQualityTracking
-
+from .review import Review
 from .payment import Payment
 
 # Make all models available for import
@@ -39,4 +39,7 @@ __all__ = [
 
     # Phase 5: Payment Models
     'Payment',
+
+    # Phase 6: Review Models
+    'Review',
 ]

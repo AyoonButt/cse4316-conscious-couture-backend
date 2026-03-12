@@ -53,14 +53,12 @@ class ClothingItem(Base):
     swaps_as_item1 = relationship('Swap', foreign_keys='Swap.user1_clothing_id', back_populates='user1_clothing')
     swaps_as_item2 = relationship('Swap', foreign_keys='Swap.user2_clothing_id', back_populates='user2_clothing')
     sales = relationship('Sale', back_populates='clothing')
+    reviews = relationship('Review', back_populates='clothing_item', cascade='all, delete-orphan')
 
     # Indexes and Constraints
-    __table_args__ = (
+    __table_args__ = (  
         Index('ix_clothing_items_owner_user_id', 'owner_user_id'),
-        Index('ix_clothing_items_clothing_type', 'clothing_type'),
-        Index('ix_clothing_items_brand', 'brand'),
         Index('ix_clothing_items_brand_id', 'brand_id'),
-        Index('ix_clothing_items_status', 'status'),
         CheckConstraint("material_composition IS NOT NULL", name='material_composition_not_null'),
     )
 

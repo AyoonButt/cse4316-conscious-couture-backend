@@ -37,10 +37,6 @@ class MaterialReference(Base):
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
-    # Indexes
-    __table_args__ = (
-        Index('ix_material_name', 'material_name'),
-    )
 
     def __repr__(self):
         return f"<MaterialReference(material_name='{self.material_name}', " \
