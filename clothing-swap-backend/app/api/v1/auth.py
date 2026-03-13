@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 import os
-from ..schemas.create_user import UserCreate
-from ..api.v1.users import create_user_google
-from ..database import get_db
+from app.schemas.create_user import UserCreate
+from app.api.v1.users import create_user_google
+from app.database import get_db
 
 GOOGLE_CLIENT_ID = os.getenv("830347299700-s47i9sicfvfh7ph3b5q9kunbk02dhldm.apps.googleusercontent.com")  # your Google client ID
 
