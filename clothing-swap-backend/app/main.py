@@ -73,6 +73,7 @@ app.include_router(stats.router, prefix="/api/v1/stats", tags=["stats"])
 # app.include_router(sales.router, prefix="/api/v1/sales", tags=["sales"]) temporary comment out so the app can run
 app.include_router(payment.router, prefix="/api/v1/payment", tags=["payment"])
 app.include_router(shipping.router, prefix="/api/v1/shipping", tags=["shipping"])
+app.include_router(reviews.router, prefix="/api/v1/reviews", tags=["reviews"])
 
 
 
