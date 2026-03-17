@@ -77,13 +77,18 @@ async def create_user_signup(user_info: UserCreate,db: Session = Depends(get_db)
     full_name = user_info.display_name
     email = user_info.email
     hashedpassword= hash_password(user_info.password)
+    username = user_info.username or email.split('@')[0]
     exist = db.query(User).filter(User.email == email).first()
     if exist:
         raise HTTPException(
         status_code=400,
         detail="Account already exists, email already registered"
     )
+    username_exists = db.query(User).filter(User.username == username).first()
+    if username_exists:
+        username = f"{username}_{email.split('@')[1].split('.')[0]}"
     make_user = User(
+        username=username,
         email= email,
         display_name=full_name,
         password_hash=hashedpassword
@@ -141,9 +146,15 @@ async def create_user_google(payload: dict = Body(...), db : Session = Depends(g
     # print("TYPE OF PASSWORD:", type(user.password))
     # print("PASSWORD VALUE:", user.password)
     # print("PASSWORD LENGTH:", len(user.password))
+    username = goog_email.split('@')[0]
+    username_exists = db.query(User).filter(User.username == username).first()
+    if username_exists:
+        username = f"{username}_{goog_email.split('@')[1].split('.')[0]}"
     make_user = User(
+        username=username,
         email= goog_email,
         display_name=goog_name,
+        password_hash="",
     )
     db.add(make_user)
     db.commit()

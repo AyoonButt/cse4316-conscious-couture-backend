@@ -14,6 +14,5 @@ python-dotenv==1.0.1
 pytz==2023.3
 stripe==14.3.0
 shipstation==0.1.3
-
-
+shipengine==2.0.5
 google-auth
