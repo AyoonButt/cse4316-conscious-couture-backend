@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
+from sqlalchemy import desc
 from ...database import get_db
 from ...models.user import User
+from ...models.statistics import UserImpactStatistics
 from ...schemas.create_user import UserCreate,SignIn
 import hashlib
 from jose import jwt, JWTError
@@ -45,6 +47,38 @@ def hash_password(password):
 @router.get("/")
 async def get_users(db: Session = Depends(get_db)):
     return {"message": "TODO: implement get all users"}
+
+
+@router.get("/leaderboard/top-sustainable")
+async def get_top_sustainable_users(db: Session = Depends(get_db)):
+    results = (
+        db.query(User, UserImpactStatistics)
+        .outerjoin(UserImpactStatistics, User.user_id == UserImpactStatistics.user_id)
+        .filter(User.share_stats == True)
+        .order_by(UserImpactStatistics.cumulative_co2_saved_kg.desc().nullslast())
+        .limit(20)
+        .all()
+    )
+    
+    leaderboard = []
+    for user, stats in results:
+        leaderboard.append({
+            "user_id": user.user_id,
+            "username": user.username,
+            "display_name": user.display_name,
+            "location": user.location,
+            "total_swaps": user.total_swaps,
+            "impact_points": user.impact_points,
+            "cumulative_co2_saved_kg": float(stats.cumulative_co2_saved_kg) if stats and stats.cumulative_co2_saved_kg else 0,
+            "cumulative_water_saved_liters": float(stats.cumulative_water_saved_liters) if stats and stats.cumulative_water_saved_liters else 0,
+            "cumulative_energy_saved_kwh": float(stats.cumulative_energy_saved_kwh) if stats and stats.cumulative_energy_saved_kwh else 0,
+            "equivalent_km_not_driven": float(stats.equivalent_km_not_driven) if stats and stats.equivalent_km_not_driven else 0,
+            "equivalent_trees_planted": float(stats.equivalent_trees_planted) if stats and stats.equivalent_trees_planted else 0,
+            "impact_rank": stats.impact_rank if stats else None,
+            "badges": user.badges or [],
+        })
+    
+    return {"leaderboard": leaderboard}
 
 
 @router.post("/signin")
