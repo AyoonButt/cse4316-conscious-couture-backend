@@ -139,7 +139,6 @@ async def create_user_signup(user_info: UserCreate,db: Session = Depends(get_db)
 
     return {
         "message": "Account created successfully",
-        # "user": make_user.to_dict()
         "access_token": token,
         "token_type": "bearer",
         "user": {
@@ -151,8 +150,6 @@ async def create_user_signup(user_info: UserCreate,db: Session = Depends(get_db)
 
 
 @router.post("/google")
-# async def create_user(db: Session = Depends(get_db)):
-    # return {"message": "TODO: implement create user"}
 async def create_user_google(payload: dict = Body(...), db : Session = Depends(get_db)):
     goog_email = payload.get("email")
     goog_name = payload.get("name")
@@ -177,9 +174,8 @@ async def create_user_google(payload: dict = Body(...), db : Session = Depends(g
                 "name": user.display_name,
             }
         }
-    # print("TYPE OF PASSWORD:", type(user.password))
-    # print("PASSWORD VALUE:", user.password)
-    # print("PASSWORD LENGTH:", len(user.password))
+
+    # ── NEW Google user ──
     username = goog_email.split('@')[0]
     username_exists = db.query(User).filter(User.username == username).first()
     if username_exists:
@@ -193,9 +189,23 @@ async def create_user_google(payload: dict = Body(...), db : Session = Depends(g
     db.add(make_user)
     db.commit()
     db.refresh(make_user)
+
+    # ── FIX: Generate JWT token for new Google users too ──
+    token_data = {
+        "user_id": make_user.user_id,
+        "exp": datetime.now(timezone.utc) + timedelta(hours=2)
+    }
+    token = jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
+
     return {
-        "message": "Account created from google",
-        "user": make_user.to_dict()
+        "access_token": token,
+        "token_type": "bearer",
+        "message": "Account created from Google",
+        "user": {
+            "id": make_user.user_id,
+            "email": make_user.email,
+            "name": make_user.display_name,
+        }
     }
 
 

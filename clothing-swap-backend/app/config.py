@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     # ShipEngine configuration
     SHIPENGINE_API_KEY: str
 
+    # Vite_Supabase (from .env file)
+    vite_supabase_url: str
+    vite_supabase_anon_key: str
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # Set stripe API key after settings are loaded
