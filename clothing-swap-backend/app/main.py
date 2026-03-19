@@ -8,9 +8,9 @@ from app.routes.auth import router
 
 from .config import settings
 from .database import init_db
-from .api.v1 import auth, users, clothing, materials, brands, swaps, impact, stats, payment, shipping, sales, reviews
+from .api.v1 import auth, users, clothing, materials, brands, swaps, impact, stats, payment, shipping, sales, reviews, cart
 from dotenv import load_dotenv
-load_dotenv() 
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +74,7 @@ app.include_router(stats.router, prefix="/api/v1/stats", tags=["stats"])
 app.include_router(payment.router, prefix="/api/v1/payment", tags=["payment"])
 app.include_router(shipping.router, prefix="/api/v1/shipping", tags=["shipping"])
 app.include_router(reviews.router, prefix="/api/v1/reviews", tags=["reviews"])
+app.include_router(cart.router, prefix="/api/v1/cart", tags=["cart"])
 
 
 
