@@ -33,6 +33,10 @@ class Settings(BaseSettings):
 
     # ShipEngine configuration
     SHIPENGINE_API_KEY: str
+    SHIPPING_DEFAULT_CARRIER: str = "UPS"
+    SHIPPING_DEFAULT_CARRIER_ID: str = "se-5007377"
+    MOCK_SHIPPING_RATES: bool = True
+    MOCK_SHIPPING_LABELS: bool = True
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

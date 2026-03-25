@@ -50,6 +50,7 @@ class ShippingRatesRequest(BaseModel):
 class RateResponse(BaseModel):
     id: str
     carrier: str
+    carrier_id: str
     service: str
     rate: str
     currency: Optional[str] = None
@@ -64,7 +65,7 @@ class ShippingRatesResponse(BaseModel):
 
 class ShippingBuyRequest(BaseModel):
     shipment_id: str
-    rate_id: str
+    rate_id: Optional[str] = None
 
 
 class ShippingBuyResponse(BaseModel):

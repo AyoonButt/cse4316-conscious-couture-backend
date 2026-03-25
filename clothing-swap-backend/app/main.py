@@ -8,7 +8,7 @@ from app.routes.auth import router
 
 from .config import settings
 from .database import init_db
-from .api.v1 import auth, users, clothing, materials, brands, swaps, impact, stats, payment, shipping
+from .api.v1 import auth, users, clothing, materials, brands, swaps, impact, stats, payment, shipping, sales, checkout, orders
 from dotenv import load_dotenv
 load_dotenv() 
 
@@ -73,6 +73,8 @@ app.include_router(stats.router, prefix="/api/v1/stats", tags=["stats"])
 app.include_router(sales.router, prefix="/api/v1/sales", tags=["sales"])
 app.include_router(payment.router, prefix="/api/v1/payment", tags=["payment"])
 app.include_router(shipping.router, prefix="/api/v1/shipping", tags=["shipping"])
+app.include_router(checkout.router, prefix="/api/v1", tags=["checkout"])
+app.include_router(orders.router, prefix="/api/v1", tags=["orders"])
 
 
 if __name__ == "__main__":

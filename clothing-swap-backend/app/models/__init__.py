@@ -12,6 +12,7 @@ from .statistics import UserImpactStatistics, PlatformImpactStatistics
 from .data_quality import DataQualityTracking
 
 from .payment import Payment
+from .order import Order
 
 # Make all models available for import
 __all__ = [
@@ -39,4 +40,5 @@ __all__ = [
 
     # Phase 5: Payment Models
     'Payment',
+    'Order',
 ]

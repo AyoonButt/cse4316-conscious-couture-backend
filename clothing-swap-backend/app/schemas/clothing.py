@@ -53,6 +53,23 @@ class ClothingItemResponse(ClothingItemBase):
         from_attributes = True
 
 
+class ClothingItemAvailabilityResponse(ClothingItemResponse):
+    available: bool
+    unavailable_reason: Optional[str] = None
+
+
+class AvailabilityItemResponse(BaseModel):
+    clothing_id: int
+    available: bool
+    status: Optional[str] = None
+    unavailable_reason: Optional[str] = None
+    updated_at: Optional[datetime] = None
+
+
+class BatchAvailabilityRequest(BaseModel):
+    clothing_ids: List[int] = Field(..., min_length=1, description="List of clothing item IDs to validate")
+
+
 class ClothingItemList(BaseModel):
     items: List[ClothingItemResponse]
     total: int
