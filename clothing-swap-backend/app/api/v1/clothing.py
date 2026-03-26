@@ -17,6 +17,9 @@ from ...schemas.clothing import (
     ClothingItemUpdate,
     ClothingItemResponse,
     ClothingItemList,
+    ClothingItemAvailabilityResponse,
+    AvailabilityItemResponse,
+    BatchAvailabilityRequest,
 )
 from ...services.payment import create_payment
 from ...schemas.sustainability import SustainabilityMetricsResponse, SwapImpactResponse
@@ -40,6 +43,22 @@ def get_optional_user(credentials: Optional[HTTPAuthorizationCredentials] = Depe
 
 
 # ── GET /clothing/ ──────────────────────────────────────────────────────
+
+def _get_unavailable_reason(status: Optional[str]) -> Optional[str]:
+    """Map backend status values to user-safe cart validation reasons."""
+    if status == "available":
+        return None
+
+    reason_by_status = {
+        "reserved": "This item is currently reserved.",
+        "pending_sale": "This item is currently reserved.",
+        "sold": "This item has been sold.",
+        "swapped": "This item has already been swapped.",
+        "deleted": "This item is no longer available.",
+    }
+
+    return reason_by_status.get(status, "This item is currently unavailable.")
+
 
 @router.get("/", response_model=ClothingItemList)
 async def get_clothing_items(
@@ -90,6 +109,49 @@ async def get_clothing_items(
     )
 
 
+@router.post("/availability", response_model=List[AvailabilityItemResponse])
+async def get_batch_availability(
+    request: BatchAvailabilityRequest,
+    db: Session = Depends(get_db),
+):
+    """Validate availability for multiple clothing items in one request."""
+
+    requested_ids = request.clothing_ids
+    items = db.query(ClothingItem).filter(ClothingItem.clothing_id.in_(requested_ids)).all()
+    item_by_id = {item.clothing_id: item for item in items}
+
+    response_items: List[AvailabilityItemResponse] = []
+
+    for clothing_id in requested_ids:
+        item = item_by_id.get(clothing_id)
+
+        if not item:
+            response_items.append(
+                AvailabilityItemResponse(
+                    clothing_id=clothing_id,
+                    status="not_found",
+                    updated_at=None,
+                    available=False,
+                    unavailable_reason="This item no longer exists.",
+                )
+            )
+            continue
+
+        status = item.status
+        response_items.append(
+            AvailabilityItemResponse(
+                clothing_id=item.clothing_id,
+                available=bool(item.available),
+                status=status,
+                unavailable_reason=item.unavailable_reason or _get_unavailable_reason(status),
+                updated_at=item.updated_at,
+            )
+        )
+
+    return response_items
+
+
+@router.get("/{clothing_id}", response_model=ClothingItemAvailabilityResponse)
 # ── GET /clothing/my-items ──────────────────────────────────────────────
 
 @router.get("/my-items")
@@ -166,7 +228,13 @@ async def get_clothing_item(clothing_id: int, db: Session = Depends(get_db)):
     if not clothing_item:
         raise HTTPException(status_code=404, detail="Clothing item not found")
 
-    return clothing_item
+    item_payload = ClothingItemResponse.model_validate(clothing_item).model_dump()
+    status = item_payload.get("status")
+    return ClothingItemAvailabilityResponse(
+        **item_payload,
+        available=bool(clothing_item.available),
+        unavailable_reason=clothing_item.unavailable_reason or _get_unavailable_reason(status),
+    )
 
 
 # ── POST /clothing/ ──────────────────────────────────────────────────────

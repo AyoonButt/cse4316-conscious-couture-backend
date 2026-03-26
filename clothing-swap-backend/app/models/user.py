@@ -12,6 +12,9 @@ class User(Base):
     username = Column(String(50), unique=True, nullable=False, index=True)
     email = Column(String(100), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=True)
+    
+    # Stripe Connect
+    stripe_account_id = Column(String(255), nullable=True, index=True)
 
     # Profile Information
     display_name = Column(String(100))

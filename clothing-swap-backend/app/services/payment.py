@@ -139,7 +139,7 @@ def create_payment(
 async def handle_stripe_webhook(db: Session, request: Request) -> None:
     """
     Verifies Stripe signature, parses event, updates DB status.
-    Syncs payment status with linked Sale record.
+    Syncs payment status with linked Sale record (legacy) and Order record (new flow).
     This function raises HTTPException on validation errors.
     """
 
@@ -167,21 +167,40 @@ async def handle_stripe_webhook(db: Session, request: Request) -> None:
         intent_id = intent["id"]
         intent_status = intent["status"]
 
+        # Check for legacy Payment record (old flow)
         payment = db.query(Payment).filter(Payment.stripe_payment_intent_id == intent_id).first()
 
-        if not payment:
+        if payment:
+            # Update payment status for legacy flow
+            old_status = payment.status
+            payment.status = intent_status
+            db.add(payment)
+
+            # Sync with Sale when payment succeeds
+            if intent_status == "succeeded" and old_status != "succeeded":
+                _sync_sale_on_payment_success(db, payment)
+
+            db.commit()
+            return
+        
+        # Check for new Order record (new flow)
+        # Import here to avoid circular dependency
+        from app.models.order import Order
+        from app.services.order import handle_payment_succeeded
+        
+        order = db.query(Order).filter(Order.payment_intent_id == intent_id).first()
+        
+        if order:
+            # Handle payment for new order flow
+            if intent_status == "succeeded":
+                handle_payment_succeeded(db, intent_id)
+            elif intent_status in ["canceled", "payment_failed"]:
+                order.order_status = "payment_failed"
+                db.add(order)
+                db.commit()
             return
 
-        # Update payment status
-        old_status = payment.status
-        payment.status = intent_status
-        db.add(payment)
-
-        # Sync with Sale when payment succeeds
-        if intent_status == "succeeded" and old_status != "succeeded":
-            _sync_sale_on_payment_success(db, payment)
-
-        db.commit()
+        # No matching payment or order found
         return
 
     # Ignore other event types (or add more handlers as you grow)

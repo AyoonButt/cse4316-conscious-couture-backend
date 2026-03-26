@@ -32,6 +32,8 @@ class ClothingItem(Base):
 
     # Swap Status
     status = Column(String(20), default='available', index=True)
+    available = Column(Boolean, default=True, nullable=False)
+    unavailable_reason = Column(String(255), nullable=True)
     times_swapped = Column(Integer, default=0)
 
     # Selling
@@ -84,6 +86,8 @@ class ClothingItem(Base):
             'weight_grams': self.weight_grams,
             'weight_estimated': self.weight_estimated,
             'status': self.status,
+            'available': self.available,
+            'unavailable_reason': self.unavailable_reason,
             'times_swapped': self.times_swapped,
             'sell_price': float(self.sell_price) if self.sell_price else None,
             'primary_image_url': self.primary_image_url,
@@ -92,7 +96,7 @@ class ClothingItem(Base):
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
 
-    def get_primary_material(self) -> str:
+    def get_primary_material(self) -> str: 
         """Get material with highest percentage"""
         if not self.material_composition:
             return None
