@@ -18,7 +18,8 @@ class ClothingItemBase(BaseModel):
 
 
 class ClothingItemCreate(ClothingItemBase):
-    owner_user_id: int = Field(..., description="ID of the user who owns this item")
+    pass
+    # owner_user_id: int = Field(..., description="ID of the user who owns this item")
 
 
 class ClothingItemUpdate(BaseModel):

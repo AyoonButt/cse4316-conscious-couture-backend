@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     MOCK_SHIPPING_RATES: bool = True
     MOCK_SHIPPING_LABELS: bool = True
 
+    # Vite_Supabase (from .env file)
+    vite_supabase_url: str
+    vite_supabase_anon_key: str
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # Set stripe API key after settings are loaded

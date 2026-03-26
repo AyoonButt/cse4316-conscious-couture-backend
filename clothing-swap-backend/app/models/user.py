@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from sqlalchemy import Column, Integer, String, Date, DateTime, Boolean, Index, JSON
+from sqlalchemy import Column, Integer, String, Date, DateTime, Boolean, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from ..database import Base
@@ -9,7 +9,7 @@ class User(Base):
     __tablename__ = 'users'
 
     user_id = Column(Integer, primary_key=True, autoincrement=True)
-    username = Column(String(50), unique=True, nullable=True, index=True)
+    username = Column(String(50), unique=True, nullable=False, index=True)
     email = Column(String(100), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=True)
     
@@ -49,12 +49,9 @@ class User(Base):
     swaps_received = relationship('Swap', foreign_keys='Swap.user2_id', back_populates='user2')
     sales_as_seller = relationship('Sale', foreign_keys='Sale.seller_id', back_populates='seller')
     sales_as_buyer = relationship('Sale', foreign_keys='Sale.buyer_id', back_populates='buyer')
+    reviews_written = relationship('Review', back_populates='reviewer', cascade='all, delete-orphan')
+    cart_items = relationship('CartItem', back_populates='user', cascade='all, delete-orphan')
 
-    # Indexes
-    __table_args__ = (
-        Index('ix_users_username', 'username'),
-        Index('ix_users_email', 'email'),
-    )
 
     def __repr__(self):
         return f"<User(username='{self.username}', email='{self.email}')>"
@@ -79,10 +76,10 @@ class User(Base):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
-        
+
         if not exclude_sensitive:
             data['email'] = self.email
-            
+
         return data
 
     def add_badge(self, badge_id: str):

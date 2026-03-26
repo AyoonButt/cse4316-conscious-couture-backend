@@ -10,11 +10,9 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 httpx==0.26.0
 aiohttp==3.9.1
-python-dotenv==1.0.0
+python-dotenv==1.0.1
 pytz==2023.3
-
-# For Stripe integration testing
 stripe==14.3.0
-
-# For ShipStation shipping labels
 shipstation==0.1.3
+shipengine==2.0.5
+google-auth

@@ -8,9 +8,9 @@ from app.routes.auth import router
 
 from .config import settings
 from .database import init_db
-from .api.v1 import auth, users, clothing, materials, brands, swaps, impact, stats, payment, shipping, sales, checkout, orders
+from .api.v1 import auth, users, clothing, materials, brands, swaps, impact, stats, payment, shipping, sales, checkout, orders, reviews, cart
 from dotenv import load_dotenv
-load_dotenv() 
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.allowed_origins_list,
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -70,11 +70,14 @@ app.include_router(brands.router, prefix="/api/v1/brands", tags=["brands"])
 app.include_router(swaps.router, prefix="/api/v1/swaps", tags=["swaps"])
 app.include_router(impact.router, prefix="/api/v1/impact", tags=["impact"])
 app.include_router(stats.router, prefix="/api/v1/stats", tags=["stats"])
-app.include_router(sales.router, prefix="/api/v1/sales", tags=["sales"])
+# app.include_router(sales.router, prefix="/api/v1/sales", tags=["sales"]) temporary comment out so the app can run
 app.include_router(payment.router, prefix="/api/v1/payment", tags=["payment"])
 app.include_router(shipping.router, prefix="/api/v1/shipping", tags=["shipping"])
 app.include_router(checkout.router, prefix="/api/v1", tags=["checkout"])
 app.include_router(orders.router, prefix="/api/v1", tags=["orders"])
+app.include_router(reviews.router, prefix="/api/v1/reviews", tags=["reviews"])
+app.include_router(cart.router, prefix="/api/v1/cart", tags=["cart"])
+
 
 
 if __name__ == "__main__":

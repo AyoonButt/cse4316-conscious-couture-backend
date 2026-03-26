@@ -95,11 +95,12 @@ def create_payment(
     # 3) Create local payment row first (so we can store payment_id in Stripe metadata)
     payment = Payment(
         sale_id=sale_id,
-        transaction_id=sale.clothing_id,  # Keep for backwards compatibility
+        transaction_id=sale.clothing_id,
         transaction_type="purchase",
         amount=amount,
         currency=currency.lower(),
         status="created",  # local status before Stripe response
+        # Use empty string to satisfy existing DB schema (NOT NULL) until DB is migrated
         stripe_payment_intent_id="pending",
     )
     db.add(payment)

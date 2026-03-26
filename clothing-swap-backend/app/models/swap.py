@@ -51,7 +51,6 @@ class Swap(Base):
         Index('ix_swaps_user1_clothing_id', 'user1_clothing_id'),
         Index('ix_swaps_user2_clothing_id', 'user2_clothing_id'),
         Index('ix_swaps_user1_user2', 'user1_id', 'user2_id'),
-        Index('ix_swaps_status', 'status'),
         Index('ix_swaps_completed_date', 'completed_date'),
         CheckConstraint('user1_id != user2_id', name='different_users'),
         CheckConstraint('user1_clothing_id != user2_clothing_id', name='different_clothing_items'),

@@ -1,4 +1,4 @@
-# Clothing Swap Environmental Impact API Backend
+#plugins=(git) Clothing Swap Environmental Impact API Backend
 
 A FastAPI-based backend system for tracking environmental impact of clothing swaps and sustainable fashion choices. This API enables users to calculate, track, and analyze the carbon footprint reduction achieved through clothing exchanges and sustainable fashion practices.
 
