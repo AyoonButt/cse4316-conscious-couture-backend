@@ -151,7 +151,7 @@ async def get_batch_availability(
     return response_items
 
 
-@router.get("/{clothing_id}", response_model=ClothingItemAvailabilityResponse)
+# @router.get("/{clothing_id}", response_model=ClothingItemAvailabilityResponse)
 # ── GET /clothing/my-items ──────────────────────────────────────────────
 
 @router.get("/my-items")
@@ -227,14 +227,8 @@ async def get_clothing_item(clothing_id: int, db: Session = Depends(get_db)):
 
     if not clothing_item:
         raise HTTPException(status_code=404, detail="Clothing item not found")
-
-    item_payload = ClothingItemResponse.model_validate(clothing_item).model_dump()
-    status = item_payload.get("status")
-    return ClothingItemAvailabilityResponse(
-        **item_payload,
-        available=bool(clothing_item.available),
-        unavailable_reason=clothing_item.unavailable_reason or _get_unavailable_reason(status),
-    )
+    
+    return ClothingItemResponse.from_orm(clothing_item)
 
 
 # ── POST /clothing/ ──────────────────────────────────────────────────────
