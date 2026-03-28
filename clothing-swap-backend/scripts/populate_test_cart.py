@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
-Populate a test cart with items (2 available, 1 unavailable) for testing availability verification.
+Populate Sarah's cart from existing database items:
+- 2 available items
+- 1 unavailable item
 """
 
 import sys
@@ -17,7 +19,9 @@ from app.models.cart import CartItem
 
 
 CART_USERNAME = "sarah_wilson"
-SELLER_USERNAME = "alex_brown"
+AVAILABLE_ITEMS_TO_USE = 2
+UNAVAILABLE_ITEMS_TO_USE = 1
+DEFAULT_TEST_PRICES = [24.99, 42.50, 35.00]
 
 
 def hash_password(password: str) -> str:
@@ -49,93 +53,51 @@ def get_or_create_user(session, username, email, display_name, location):
     return user
 
 
-def create_test_items(session, owner_user_id):
-    """Create 3 test items: 2 available, 1 unavailable."""
-    
-    items_data = [
-        {
-            "clothing_type": "T-Shirt",
-            "brand": "Patagonia",
-            "description": "Sarah cart test - Available blue cotton t-shirt",
-            "size": "M",
-            "color": "Blue",
-            "condition": "Good",
-            "material_composition": {"Cotton": 100},
-            "available": True,
-            "unavailable_reason": None,
-            "sell_price": 24.99,
-        },
-        {
-            "clothing_type": "Jeans",
-            "brand": "Levi's",
-            "description": "Sarah cart test - Available dark wash jeans",
-            "size": "32",
-            "color": "Dark Blue",
-            "condition": "Excellent",
-            "material_composition": {"Cotton": 99, "Spandex": 1},
-            "available": True,
-            "unavailable_reason": None,
-            "sell_price": 42.50,
-        },
-        {
-            "clothing_type": "Hoodie",
-            "brand": "The North Face",
-            "description": "Sarah cart test - Unavailable grey hoodie",
-            "size": "L",
-            "color": "Grey",
-            "condition": "Good",
-            "material_composition": {"Polyester": 80, "Cotton": 20},
-            "available": False,
-            "unavailable_reason": "Item sold - no longer available",
-            "sell_price": 35.00,
-        }
-    ]
-    
-    created_items = []
-    
-    for idx, item_data in enumerate(items_data, 1):
-        # Check if item already exists by description
-        existing_item = session.query(ClothingItem).filter(
-            ClothingItem.description == item_data["description"]
-        ).first()
-        
-        if existing_item:
-            existing_item.owner_user_id = owner_user_id
-            existing_item.available = item_data["available"]
-            existing_item.status = "available" if item_data["available"] else "unavailable"
-            existing_item.unavailable_reason = item_data["unavailable_reason"]
-            existing_item.sell_price = item_data["sell_price"]
-            print(f"  ✅ Item {idx} already exists: {item_data['description']}")
-            created_items.append(existing_item)
-            continue
-        
-        item = ClothingItem(
-            owner_user_id=owner_user_id,
-            clothing_type=item_data["clothing_type"],
-            brand=item_data["brand"],
-            description=item_data["description"],
-            size=item_data["size"],
-            color=item_data["color"],
-            condition=item_data["condition"],
-            material_composition=item_data["material_composition"],
-            available=item_data["available"],
-            unavailable_reason=item_data["unavailable_reason"],
-            status="available" if item_data["available"] else "unavailable",
-            sell_price=item_data["sell_price"],
+def select_existing_items(session, cart_user_id):
+    """Select 2 available and 1 unavailable items already in the database."""
+
+    all_items = (
+        session.query(ClothingItem)
+        .filter(ClothingItem.owner_user_id != cart_user_id)
+        .order_by(ClothingItem.clothing_id.asc())
+        .all()
+    )
+
+    available_items = [item for item in all_items if item.status == "available"]
+    unavailable_items = [item for item in all_items if item.status != "available"]
+
+    if len(available_items) < AVAILABLE_ITEMS_TO_USE:
+        raise ValueError(
+            f"Need at least {AVAILABLE_ITEMS_TO_USE} available items, found {len(available_items)}"
         )
-        
-        session.add(item)
-        created_items.append(item)
-        availability_status = "✅ AVAILABLE" if item_data["available"] else "❌ UNAVAILABLE"
-        print(f"  Created Item {idx}: {item_data['clothing_type']} - {availability_status}")
-    
+
+    if len(unavailable_items) < UNAVAILABLE_ITEMS_TO_USE:
+        raise ValueError(
+            f"Need at least {UNAVAILABLE_ITEMS_TO_USE} unavailable items, found {len(unavailable_items)}"
+        )
+
+    selected_items = (
+        available_items[:AVAILABLE_ITEMS_TO_USE]
+        + unavailable_items[:UNAVAILABLE_ITEMS_TO_USE]
+    )
+
+    for index, item in enumerate(selected_items):
+        if not item.sell_price or float(item.sell_price) <= 0:
+            item.sell_price = DEFAULT_TEST_PRICES[index]
+        if item.status == "available":
+            item.available = True
+            item.unavailable_reason = None
+        else:
+            item.available = False
+            if not item.unavailable_reason:
+                item.unavailable_reason = "Item is no longer available"
+
     session.commit()
-    
-    # Refresh to get IDs
-    for item in created_items:
+
+    for item in selected_items:
         session.refresh(item)
-    
-    return created_items
+
+    return selected_items
 
 
 def add_items_to_cart(session, user_id, items):
@@ -171,7 +133,7 @@ def main():
         init_db()
         session = get_database_session()
         
-        # Get or create test users
+        # Get or create cart user
         print("📝 User Setup:")
         user = get_or_create_user(
             session,
@@ -180,17 +142,16 @@ def main():
             "Sarah Wilson",
             "Austin, TX",
         )
-        seller = get_or_create_user(
-            session,
-            SELLER_USERNAME,
-            "alex.brown@example.com",
-            "Alex Brown",
-            "Seattle, WA",
-        )
-        
-        # Create test items
-        print("\n📦 Creating Test Items (2 available, 1 unavailable):")
-        items = create_test_items(session, seller.user_id)
+
+        # Select existing database items
+        print("\n📦 Selecting Existing Database Items (2 available, 1 unavailable):")
+        items = select_existing_items(session, user.user_id)
+        for idx, item in enumerate(items, 1):
+            availability_status = "✅ AVAILABLE" if item.available else "❌ UNAVAILABLE"
+            print(
+                f"  Selected Item {idx}: ID {item.clothing_id} | {item.clothing_type} | "
+                f"{item.brand} | {availability_status} | ${float(item.sell_price):.2f}"
+            )
         
         # Add items to cart
         print("\n🛍️  Adding Items to Cart:")
@@ -202,7 +163,6 @@ def main():
         print("="*60)
         print(f"User: {user.username} (ID: {user.user_id})")
         print(f"Email: {user.email}")
-        print(f"Seller account for seeded items: {seller.username} (ID: {seller.user_id})")
         print(f"\nCart Contents:")
         
         cart_items = session.query(CartItem).filter(CartItem.user_id == user.user_id).all()
