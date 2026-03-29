@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 from pydantic import BaseModel, Field
 from datetime import datetime
+from sqlalchemy import or_, and_
 
 from ...database import get_db
 from ...models.swap import Swap
@@ -146,6 +147,8 @@ def create_swap(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user),
 ):
+    print("Creating swap...") 
+
     """
     Create a swap request.
 
@@ -200,13 +203,23 @@ def create_swap(
             detail=f"Target item is not available (status: {target_item.status})"
         )
 
-    # ── 6. Check for duplicate pending swap ──
-    existing = db.query(Swap).filter(
+    print("Checking duplicate swap:")
+    print("My item:", payload.my_clothing_id)
+    print("Target item:", payload.target_clothing_id)
+    # ── 6. Check for duplicate pending swap ── in both directions
+    existing = db.query(Swap).filter(or_(and_(
         Swap.user1_clothing_id == payload.my_clothing_id,
         Swap.user2_clothing_id == payload.target_clothing_id,
+        ),
+        and_(
+        Swap.user1_clothing_id == payload.target_clothing_id,
+        Swap.user2_clothing_id == payload.my_clothing_id,
+        )
+        ),
         Swap.status == "pending",
     ).first()
     if existing:
+        print("Duplicate found:", existing.swap_id)
         raise HTTPException(
             status_code=409,
             detail="You already have a pending swap request for these items"
