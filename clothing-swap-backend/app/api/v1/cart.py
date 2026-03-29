@@ -282,6 +282,7 @@ def checkout_cart(
         checkout_results.append(
             CheckoutItemResult(
                 clothing_id=clothing.clothing_id,
+                seller_id=clothing.owner_user_id,
                 sale_id=sale.sale_id,
                 payment_id=payment.id,
                 client_secret=client_secret,

@@ -61,15 +61,15 @@ if (-not (Test-Path $envPath)) {
     Write-Error '.env file not found. Create clothing-swap-backend/.env before starting the backend.'
 }
 
-$requiredEnvKeys = @(
-    'STRIPE_SECRET_KEY',
-    'STRIPE_PUBLISHABLE_KEY',
-    'STRIPE_WEBHOOK_SECRET',
-    'SHIPSTATION_API_KEY',
-    'SHIPSTATION_API_SECRET',
-    'SHIPENGINE_API_KEY',
-    'vite_supabase_url',
-    'vite_supabase_anon_key'
+$requiredEnvKeyGroups = @(
+    @('STRIPE_SECRET_KEY'),
+    @('STRIPE_PUBLISHABLE_KEY'),
+    @('STRIPE_WEBHOOK_SECRET'),
+    @('SHIPSTATION_API_KEY'),
+    @('SHIPSTATION_API_SECRET'),
+    @('SHIPENGINE_API_KEY'),
+    @('vite_supabase_url', 'VITE_SUPABASE_URL'),
+    @('vite_supabase_anon_key', 'VITE_SUPABASE_ANON_KEY')
 )
 
 $envFromFile = @{}
@@ -88,11 +88,20 @@ Get-Content $envPath | ForEach-Object {
 }
 
 $missingKeys = @()
-foreach ($key in $requiredEnvKeys) {
-    $inProcessEnv = [string]::IsNullOrWhiteSpace((Get-Item -Path "Env:$key" -ErrorAction SilentlyContinue).Value) -eq $false
-    $inDotEnv = $envFromFile.ContainsKey($key) -and -not [string]::IsNullOrWhiteSpace($envFromFile[$key])
-    if (-not $inProcessEnv -and -not $inDotEnv) {
-        $missingKeys += $key
+foreach ($keyGroup in $requiredEnvKeyGroups) {
+    $keyFound = $false
+
+    foreach ($key in $keyGroup) {
+        $inProcessEnv = [string]::IsNullOrWhiteSpace((Get-Item -Path "Env:$key" -ErrorAction SilentlyContinue).Value) -eq $false
+        $inDotEnv = $envFromFile.ContainsKey($key) -and -not [string]::IsNullOrWhiteSpace($envFromFile[$key])
+        if ($inProcessEnv -or $inDotEnv) {
+            $keyFound = $true
+            break
+        }
+    }
+
+    if (-not $keyFound) {
+        $missingKeys += ($keyGroup -join ' or ')
     }
 }
 

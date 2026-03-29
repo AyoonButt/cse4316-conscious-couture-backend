@@ -54,7 +54,7 @@ def get_or_create_user(session, username, email, display_name, location):
 
 
 def select_existing_items(session, cart_user_id):
-    """Select 2 available and 1 unavailable items already in the database."""
+    """Select 2 available and 1 unavailable items from the SAME owner."""
 
     all_items = (
         session.query(ClothingItem)
@@ -63,18 +63,45 @@ def select_existing_items(session, cart_user_id):
         .all()
     )
 
-    available_items = [item for item in all_items if item.status == "available"]
-    unavailable_items = [item for item in all_items if item.status != "available"]
+    # Group items by owner
+    from collections import defaultdict
+    items_by_owner = defaultdict(list)
+    for item in all_items:
+        items_by_owner[item.owner_user_id].append(item)
 
-    if len(available_items) < AVAILABLE_ITEMS_TO_USE:
-        raise ValueError(
-            f"Need at least {AVAILABLE_ITEMS_TO_USE} available items, found {len(available_items)}"
-        )
+    # Find an owner with enough items (prefer one with both available and unavailable)
+    chosen_owner_id = None
+    for owner_id, items in items_by_owner.items():
+        avail = [i for i in items if i.status == "available"]
+        unavail = [i for i in items if i.status != "available"]
+        if len(avail) >= AVAILABLE_ITEMS_TO_USE and len(unavail) >= UNAVAILABLE_ITEMS_TO_USE:
+            chosen_owner_id = owner_id
+            break
 
+    # Fallback: owner with most total items (mark extras unavailable)
+    if chosen_owner_id is None:
+        chosen_owner_id = max(items_by_owner, key=lambda oid: len(items_by_owner[oid]))
+
+    owner_items = items_by_owner[chosen_owner_id]
+    available_items = [item for item in owner_items if item.status == "available"]
+    unavailable_items = [item for item in owner_items if item.status != "available"]
+
+    # If not enough unavailable items, force one available item to unavailable
     if len(unavailable_items) < UNAVAILABLE_ITEMS_TO_USE:
-        raise ValueError(
-            f"Need at least {UNAVAILABLE_ITEMS_TO_USE} unavailable items, found {len(unavailable_items)}"
-        )
+        extra = available_items[AVAILABLE_ITEMS_TO_USE:]
+        if not extra:
+            raise ValueError(
+                f"Owner {chosen_owner_id} does not have enough items to fill the cart."
+            )
+        item_to_force = extra[0]
+        item_to_force.status = "sold"
+        session.commit()
+        session.refresh(item_to_force)
+        available_items = available_items[:AVAILABLE_ITEMS_TO_USE]
+        unavailable_items = [item_to_force]
+
+    owner_user = session.query(User).filter(User.user_id == chosen_owner_id).first()
+    print(f"\n👤 Items owner: {owner_user.username} ({owner_user.email})")
 
     selected_items = (
         available_items[:AVAILABLE_ITEMS_TO_USE]
