@@ -10,7 +10,7 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
 
-from app.database import get_database_session
+from app.database import get_database_session, init_db
 from app.models.user import User
 
 
@@ -104,6 +104,7 @@ def main():
     print("🚀 Creating sample users...")
     
     try:
+        init_db()
         session = get_database_session()
         
         users = create_sample_users(session)

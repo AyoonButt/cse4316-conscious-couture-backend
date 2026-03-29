@@ -12,6 +12,7 @@ class CartItemResponse(BaseModel):
     cart_item_id: int
     clothing_id: int
     name: str
+    owner_name: Optional[str] = None
     size: Optional[str] = None
     price: Optional[float] = None
     brand: Optional[str] = None

@@ -35,6 +35,7 @@ def _build_cart_item_response(cart_item: CartItem) -> CartItemResponse:
         cart_item_id=cart_item.cart_item_id,
         clothing_id=ci.clothing_id,
         name=ci.description or f"{ci.clothing_type} by {ci.brand or 'Unknown'}",
+        owner_name=(ci.owner.display_name or ci.owner.username) if ci.owner else None,
         size=ci.size,
         price=float(ci.sell_price) if ci.sell_price else 0,
         brand=ci.brand,

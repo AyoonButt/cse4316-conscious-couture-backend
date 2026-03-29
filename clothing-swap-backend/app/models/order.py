@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Numeric, Text, Index, CheckConstraint
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Numeric, Text, CheckConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from ..database import Base
@@ -65,10 +65,6 @@ class Order(Base):
     __table_args__ = (
         CheckConstraint('buyer_user_id != seller_user_id', name='different_order_users'),
         CheckConstraint('amount_total > 0', name='positive_order_amount'),
-        Index('ix_orders_buyer_user_id', 'buyer_user_id'),
-        Index('ix_orders_seller_user_id', 'seller_user_id'),
-        Index('ix_orders_clothing_id', 'clothing_id'),
-        Index('ix_orders_order_status', 'order_status'),
     )
 
     def to_dict(self):
