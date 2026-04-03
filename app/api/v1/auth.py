@@ -29,6 +29,5 @@ async def google_login(req: Request,db : Session = Depends(get_db)): #handles ht
         raise HTTPException(status_code=400, detail="No ID token provided")
 
     payload = await verify(token)
-    print("Google Id token verified:", payload)
     make_user = await create_user_google(payload,db)
     return make_user

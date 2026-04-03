@@ -1,6 +1,10 @@
 from pydantic_settings import BaseSettings
 from typing import List
+from pathlib import Path
 import os, stripe
+
+
+DEFAULT_DATABASE_PATH = (Path(__file__).resolve().parent.parent / 'clothing_swap.db').as_posix()
 
 
 class Settings(BaseSettings):
@@ -10,7 +14,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     HOST: str = "0.0.0.0"
     PORT: int = 8000
-    DATABASE_URL: str = "sqlite:///./clothing_swap.db"
+    DATABASE_URL: str = f"sqlite:///{DEFAULT_DATABASE_PATH}"
     SECRET_KEY: str = "your-secret-key-change-this-in-production-min-32-chars"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
@@ -33,6 +37,22 @@ class Settings(BaseSettings):
 
     # ShipEngine configuration
     SHIPENGINE_API_KEY: str
+    SHIPPING_DEFAULT_CARRIER: str = "UPS"
+    SHIPPING_DEFAULT_CARRIER_ID: str = "se-5007377"
+    MOCK_SHIPPING_RATES: bool = True
+    MOCK_SHIPPING_LABELS: bool = True
+
+    # Vite_Supabase (from .env file)
+    vite_supabase_url: str
+    vite_supabase_anon_key: str
+
+    # Email / SMTP configuration (optional — emails silently skipped if not set)
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    EMAIL_FROM: str = "noreply@consciouscouture.app"
+    EMAIL_ENABLED: bool = False
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

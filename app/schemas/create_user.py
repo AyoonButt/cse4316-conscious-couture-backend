@@ -11,7 +11,7 @@ class SignIn(BaseModel):
     email: EmailStr
     password: str = Field(min_length=5,max_length=72)
 class UserCreate(BaseModel):
-    # username : Optional[str] = None
+    username : Optional[str] = None
     email: EmailStr
     password: str = Field(min_length=5,max_length=72)
     display_name: str

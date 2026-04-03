@@ -9,9 +9,12 @@ class User(Base):
     __tablename__ = 'users'
 
     user_id = Column(Integer, primary_key=True, autoincrement=True)
-    username = Column(String(50), unique=True, nullable=True, index=True)
+    username = Column(String(50), unique=True, nullable=False, index=True)
     email = Column(String(100), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=True)
+    
+    # Stripe Connect
+    stripe_account_id = Column(String(255), nullable=True, index=True)
 
     # Profile Information
     display_name = Column(String(100))
@@ -47,6 +50,7 @@ class User(Base):
     sales_as_seller = relationship('Sale', foreign_keys='Sale.seller_id', back_populates='seller')
     sales_as_buyer = relationship('Sale', foreign_keys='Sale.buyer_id', back_populates='buyer')
     reviews_written = relationship('Review', back_populates='reviewer', cascade='all, delete-orphan')
+    cart_items = relationship('CartItem', back_populates='user', cascade='all, delete-orphan')
 
 
     def __repr__(self):
@@ -72,10 +76,10 @@ class User(Base):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
-        
+
         if not exclude_sensitive:
             data['email'] = self.email
-            
+
         return data
 
     def add_badge(self, badge_id: str):

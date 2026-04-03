@@ -12,34 +12,42 @@ from .statistics import UserImpactStatistics, PlatformImpactStatistics
 from .data_quality import DataQualityTracking
 from .review import Review
 from .payment import Payment
+from .order import Order
+from .cart import CartItem
+from .notification import Notification
 
 # Make all models available for import
 __all__ = [
     # Phase 1: Reference Data Models
     'MaterialReference',
-    'ClothingTypeReference', 
+    'ClothingTypeReference',
     'CalculationParameter',
-    
+
     # Phase 2: Core Entity Models
     'User',
     'BrandSustainability',
-    
+
     # Phase 3: Main Business Models
     'ClothingItem',
     'MaterialCompositionContribution',
     'Swap',
     'Sale',
-    
-    # Phase 4: Impact Calculation Models
+    'CartItem',
+
+    # Phase 4: Impact & Analytics
     'ClothingEnvironmentalImpact',
     'SwapEnvironmentalImpact',
     'UserImpactStatistics',
     'PlatformImpactStatistics',
     'DataQualityTracking',
 
-    # Phase 5: Payment Models
-    'Payment',
-
-    # Phase 6: Review Models
+    # Phase 5: Social
     'Review',
+
+    # Phase 6: Payments
+    'Payment',
+    'Order',
+
+    # Phase 7: Notifications
+    'Notification',
 ]

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from datetime import datetime, timezone
 from typing import List, Tuple, Optional
 from fastapi import HTTPException
 from app.config import settings
@@ -12,8 +13,17 @@ from app.schemas.shipping import (
 )
 from shipengine import ShipEngine
 
-# Initialize ShipEngine client
-shipengine_client = ShipEngine(settings.SHIPENGINE_API_KEY)
+DEFAULT_CARRIER = settings.SHIPPING_DEFAULT_CARRIER
+DEFAULT_CARRIER_ID = settings.SHIPPING_DEFAULT_CARRIER_ID
+MOCK_UPS_RATES = [
+    {"id": "mock-ups-ground", "service": "UPS Ground", "rate": "8.99", "delivery_days": 5},
+]
+
+
+def _get_shipengine_client() -> ShipEngine:
+    if not settings.SHIPENGINE_API_KEY:
+        raise HTTPException(status_code=500, detail="ShipEngine API key is not configured")
+    return ShipEngine(settings.SHIPENGINE_API_KEY)
 
 
 def _require_api_key() -> None:
@@ -21,9 +31,36 @@ def _require_api_key() -> None:
         raise HTTPException(status_code=500, detail="ShipEngine API key is not configured")
 
 
+def _mock_shipment_id() -> str:
+    return f"mock-shipment-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+
+
+def _build_mock_rates() -> List[RateResponse]:
+    return [
+        RateResponse(
+            id=mock_rate["id"],
+            carrier=DEFAULT_CARRIER,
+            carrier_id=DEFAULT_CARRIER_ID,
+            service=mock_rate["service"],
+            rate=mock_rate["rate"],
+            currency="USD",
+            delivery_days=mock_rate["delivery_days"],
+            delivery_date=None,
+        )
+        for mock_rate in MOCK_UPS_RATES
+    ]
+
+
 def verify_address(address: AddressVerificationRequest) -> AddressVerificationResponse:
     """Verify and normalize a shipping address using ShipEngine."""
     _require_api_key()
+    shipengine_client = _get_shipengine_client()
+
+    if (address.country or "US").upper() != "US":
+        return AddressVerificationResponse(
+            valid=False,
+            errors=["Shipping is currently limited to the US"],
+        )
     
     try:
         address_dict = {
@@ -77,7 +114,8 @@ def verify_address(address: AddressVerificationRequest) -> AddressVerificationRe
 def _rate_to_response(rate: dict) -> RateResponse:
     return RateResponse(
         id=rate.get("id"),
-        carrier=rate.get("carrier"),
+        carrier=DEFAULT_CARRIER,
+        carrier_id=DEFAULT_CARRIER_ID,
         service=rate.get("service"),
         rate=rate.get("rate"),
         currency=rate.get("currency"),
@@ -87,7 +125,16 @@ def _rate_to_response(rate: dict) -> RateResponse:
 
 
 def create_shipping_rates(payload: ShippingRatesRequest) -> Tuple[str, List[RateResponse]]:
+    to_country = (payload.to_address.country or "US").upper()
+    from_country = (payload.from_address.country or "US").upper()
+    if to_country != "US" or from_country != "US":
+        raise HTTPException(status_code=400, detail="Shipping is currently limited to the US")
+
+    if settings.MOCK_SHIPPING_RATES:
+        return _mock_shipment_id(), _build_mock_rates()
+
     _require_api_key()
+    shipengine_client = _get_shipengine_client()
 
     try:
         # Get rates from ShipEngine
@@ -124,29 +171,45 @@ def create_shipping_rates(payload: ShippingRatesRequest) -> Tuple[str, List[Rate
                     "height": payload.parcel.height or 0,
                     "unit": "inch"
                 }
-            }]
+            }],
+            "rate_options": {
+                "carrier_ids": [DEFAULT_CARRIER_ID],
+            },
         })
         
         if not rates_result or not rates_result.get('rates'):
             raise HTTPException(status_code=502, detail="No shipping rates available")
         
-        rates = [
+        all_rates = [
             _rate_to_response(rate)
             for rate in rates_result['rates']
         ]
-        
+
+        rates = all_rates
+
+        # Sort by cheapest rate first
+        rates.sort(key=lambda r: float(r.rate) if r.rate else float("inf"))
+
         shipment_id = rates_result.get('shipment_id', 'unknown')
-        return shipment_id, rates
+        return shipment_id, rates[:1]
         
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"ShipEngine error: {str(exc)}")
 
 
 def buy_shipping_label(payload: ShippingBuyRequest) -> Tuple[str, str | None, str | None]:
+    if settings.MOCK_SHIPPING_LABELS:
+        mock_tracking = f"1ZMOCK{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+        mock_label_url = f"https://mock.shipping.local/labels/{payload.shipment_id}.pdf"
+        return payload.shipment_id, mock_tracking, mock_label_url
+
     _require_api_key()
+    shipengine_client = _get_shipengine_client()
+    if not payload.rate_id:
+        raise HTTPException(status_code=400, detail="rate_id is required when mock labels are disabled")
 
     try:
-        # Purchase label using ShipEngine
+        # Purchase label using ShipEngine only when mocking is disabled.
         label_result = shipengine_client.create_label_from_rate_id({
             "shipment_id": payload.shipment_id,
             "rate_id": payload.rate_id,
