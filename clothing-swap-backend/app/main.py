@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
     db.commit()
     cotton = MaterialReference(
         material_name="cotton",
-        co2_per_kg=50,
+        co2_per_kg=35,
         water_liters_per_kg=13500,
         energy_mj_per_kg=25,
         last_updated=datetime.utcnow()
@@ -196,7 +196,7 @@ app.include_router(brands.router, prefix="/api/v1/brands", tags=["brands"])
 app.include_router(swaps.router, prefix="/api/v1/swaps", tags=["swaps"])
 app.include_router(impact.router, prefix="/api/v1/impact", tags=["impact"])
 app.include_router(stats.router, prefix="/api/v1/stats", tags=["stats"])
-# app.include_router(sales.router, prefix="/api/v1/sales", tags=["sales"]) temporary comment out so the app can run
+app.include_router(sales.router, prefix="/api/v1/sales", tags=["sales"])
 app.include_router(payment.router, prefix="/api/v1/payment", tags=["payment"])
 app.include_router(shipping.router, prefix="/api/v1/shipping", tags=["shipping"])
 app.include_router(checkout.router, prefix="/api/v1", tags=["checkout"])

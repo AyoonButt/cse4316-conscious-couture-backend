@@ -69,7 +69,7 @@ async def get_clothing_items(
     brand: Optional[str] = Query(None, description="Filter by brand name"),
     size: Optional[str] = Query(None, description="Filter by size"),
     condition: Optional[str] = Query(None, description="Filter by condition"),
-    status: Optional[str] = Query("available", description="Filter by status"),
+    status: Optional[str] = Query(None, description="Filter by status"),
     search: Optional[str] = Query(None, description="Search in description and brand"),
     category: Optional[str] = Query(None, description="Filter by category (Men, Women, etc.)"),
 ):
