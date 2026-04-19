@@ -54,6 +54,7 @@ class CheckoutItemResult(BaseModel):
     clothing_id: int
     seller_id: int
     sale_id: int
+    order_id: int
     payment_id: int
     client_secret: str
     amount: str

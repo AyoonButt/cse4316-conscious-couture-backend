@@ -32,9 +32,5 @@ def create_shipping_rates_endpoint(payload: ShippingRatesRequest) -> ShippingRat
 
 @router.post("/buy", response_model=ShippingBuyResponse)
 def buy_shipping_label_endpoint(payload: ShippingBuyRequest) -> ShippingBuyResponse:
-    shipment_id, tracking_code, label_url = buy_shipping_label(payload)
-    return ShippingBuyResponse(
-        shipment_id=shipment_id,
-        tracking_code=tracking_code,
-        label_url=label_url,
-    )
+    result = buy_shipping_label(payload)
+    return ShippingBuyResponse(**result)
