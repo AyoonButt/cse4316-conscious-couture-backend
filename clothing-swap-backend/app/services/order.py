@@ -18,8 +18,10 @@ from app.models.clothing import ClothingItem
 # Configure Stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
-# Platform fee percentage (e.g., 5% = 0.05)
-PLATFORM_FEE_PERCENT = Decimal("0.05")
+# Net-zero platform fee constants: covers only actual service costs, zero profit
+_STRIPE_PERCENT = Decimal("0.029")   # Stripe: 2.9% of transaction
+_STRIPE_FIXED = Decimal("0.30")       # Stripe: $0.30 fixed per transaction
+_SHIPENGINE_PER_ORDER = Decimal("0.20")  # ShipEngine: avg $0.20 per label
 
 
 # ---- Helper Functions ----
@@ -33,8 +35,8 @@ def _to_stripe_amount_cents(amount: Decimal) -> int:
 
 
 def _calculate_platform_fee(amount: Decimal) -> Decimal:
-    """Calculate platform fee from total amount"""
-    fee = (amount * PLATFORM_FEE_PERCENT).quantize(Decimal("0.05"))
+    """Platform fee = Stripe processing cost + ShipEngine label cost (net zero profit)."""
+    fee = (amount * _STRIPE_PERCENT + _STRIPE_FIXED + _SHIPENGINE_PER_ORDER).quantize(Decimal("0.01"))
     return fee
 
 

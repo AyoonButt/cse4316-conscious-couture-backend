@@ -64,11 +64,31 @@ class ShippingRatesResponse(BaseModel):
 
 
 class ShippingBuyRequest(BaseModel):
-    shipment_id: str
+    shipment_id: Optional[str] = None
     rate_id: Optional[str] = None
+    sale_id: Optional[int] = None
 
 
 class ShippingBuyResponse(BaseModel):
     shipment_id: str
-    tracking_code: Optional[str] = None
+    tracking_number: Optional[str] = None
     label_url: Optional[str] = None
+    mock: bool = False
+    status: str = "label_ready"
+    sale_id: Optional[int] = None
+
+
+class ShippingConfigResponse(BaseModel):
+    mock_rates: bool
+    mock_labels: bool
+    carrier_id: str
+    carrier_name: str
+
+
+class LabelStatusResponse(BaseModel):
+    sale_id: int
+    tracking_number: Optional[str] = None
+    label_url: Optional[str] = None
+    shipping_carrier: Optional[str] = None
+    status: str
+    mock: bool = False

@@ -8,6 +8,7 @@ from datetime import datetime
 from ...database import get_db
 from ...models.cart import CartItem
 from ...models.clothing import ClothingItem
+from ...models.order import Order
 from ...models.sale import Sale
 from ...models.user import User
 from ...schemas.cart import (
@@ -242,9 +243,13 @@ def checkout_cart(
                 detail=f"Cannot purchase your own item (ID {clothing.clothing_id})",
             )
 
-    # ── create sales + payments ──
+    # ── create sales + payments + orders ──
     checkout_results: List[CheckoutItemResult] = []
     total = Decimal("0")
+    # Net-zero platform fee: covers only Stripe processing + ShipEngine label cost
+    STRIPE_PERCENT = Decimal("0.029")
+    STRIPE_FIXED = Decimal("0.30")
+    SHIPENGINE_PER_ORDER = Decimal("0.20")
 
     for ci in cart_items:
         clothing = ci.clothing
@@ -269,6 +274,36 @@ def checkout_cart(
         db.add(sale)
         db.flush()  # Get sale_id without committing
 
+        # Create Order record (populates orders table)
+        # Platform fee = Stripe cost + ShipEngine label cost (net zero profit)
+        platform_fee = (
+            (price * STRIPE_PERCENT + STRIPE_FIXED + SHIPENGINE_PER_ORDER)
+            .quantize(Decimal("0.01"))
+        )
+        seller_net = (price - platform_fee).quantize(Decimal("0.01"))
+        order = Order(
+            buyer_user_id=user_id,
+            seller_user_id=clothing.owner_user_id,
+            clothing_id=clothing.clothing_id,
+            order_status="created",
+            amount_total=price,
+            seller_net=seller_net,
+            platform_fee=platform_fee,
+            currency="usd",
+        )
+        db.add(order)
+        db.flush()  # Get order_id without committing
+
+        # Mark item as pending so no other buyer can order it
+        clothing.status = "pending"
+        db.add(clothing)
+
+        # Remove this item from ALL users' carts (including seller's if somehow present)
+        db.query(CartItem).filter(
+            CartItem.clothing_id == clothing.clothing_id,
+            CartItem.user_id != user_id,  # buyer's cart cleared by frontend; clean everyone else's
+        ).delete(synchronize_session=False)
+
         # Create Stripe PaymentIntent via existing service
         payment, client_secret = create_payment(
             db,
@@ -284,6 +319,7 @@ def checkout_cart(
                 clothing_id=clothing.clothing_id,
                 seller_id=clothing.owner_user_id,
                 sale_id=sale.sale_id,
+                order_id=order.order_id,
                 payment_id=payment.id,
                 client_secret=client_secret,
                 amount=str(price),
