@@ -19,6 +19,14 @@ class User(Base):
     # Profile Information
     display_name = Column(String(100))
     location = Column(String(100))
+    birth_date = Column(Date, nullable=True)
+    address_line1 = Column(String(255), nullable=True)
+    address_line2 = Column(String(255), nullable=True)
+    phone_number = Column(String(20), nullable=True)
+    city = Column(String(100), nullable=True)
+    state = Column(String(2), nullable=True)
+    postal_code = Column(String(10), nullable=True)
+    country = Column(String(2), nullable=True, default='US')
     joined_date = Column(Date, default=func.current_date())
 
     # Preferences
@@ -63,6 +71,14 @@ class User(Base):
             'username': self.username,
             'display_name': self.display_name,
             'location': self.location,
+            'birth_date': self.birth_date.isoformat() if self.birth_date else None,
+            'address_line1': self.address_line1,
+            'address_line2': self.address_line2,
+            'phone_number': self.phone_number,
+            'city': self.city,
+            'state': self.state,
+            'postal_code': self.postal_code,
+            'country': self.country,
             'joined_date': self.joined_date.isoformat() if self.joined_date else None,
             'preferred_units': self.preferred_units,
             'email_notifications': self.email_notifications,

@@ -105,8 +105,10 @@ class Order(Base):
         return self.order_status in ['created', 'payment_processing', 'payment_succeeded']
 
     def can_mark_shipped(self) -> bool:
-        """Check if order can be marked as shipped"""
-        return self.order_status == 'payment_succeeded'
+        """Check if order can be marked as shipped.
+        Accepts 'created' because payment confirmation happens client-side
+        and no webhook updates the order status to payment_succeeded."""
+        return self.order_status in ('created', 'payment_succeeded')
 
     def can_mark_delivered(self) -> bool:
         """Check if order can be marked as delivered"""

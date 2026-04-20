@@ -17,6 +17,7 @@ from app.services.order import (
     create_payment_intent_for_order,
     get_checkout_shipping_quote,
 )
+from .users import get_current_user
 
 router = APIRouter(prefix="/checkout", tags=["checkout"])
 
@@ -25,49 +26,30 @@ router = APIRouter(prefix="/checkout", tags=["checkout"])
 def create_order_endpoint(
     payload: CheckoutCreateOrderRequest,
     db: Session = Depends(get_db),
-    # TODO: Add authentication to get buyer_user_id from JWT token
-    # For now, we'll need to pass it in the request or use a hardcoded value
+    buyer_user_id: int = Depends(get_current_user),
 ):
     """
     Create a new order for a clothing item.
     This is the first step in the checkout process.
-    
-    Flow:
-    1. Buyer adds item to cart
-    2. Buyer enters shipping info
-    3. This endpoint creates the order
-    4. Returns order details for confirmation
     """
-    # TODO: Get buyer_user_id from authenticated user
-    # For now, you'll need to add this to the request schema or get from auth
-    # buyer_user_id = get_current_user_id(request)
-    
-    # Temporary: Add buyer_user_id to request schema or use a test value
-    # For production, this MUST come from authenticated session
-    raise HTTPException(
-        status_code=501,
-        detail="Authentication required. Please add buyer_user_id from JWT token."
+    order = create_order(
+        db,
+        buyer_user_id=buyer_user_id,
+        clothing_id=payload.clothing_id,
+        shipping_address=payload.shipping_address,
+        buyer_notes=payload.buyer_notes,
     )
-    
-    # Uncomment and fix when authentication is added:
-    # order = create_order(
-    #     db,
-    #     buyer_user_id=buyer_user_id,
-    #     clothing_id=payload.clothing_id,
-    #     shipping_address=payload.shipping_address,
-    #     buyer_notes=payload.buyer_notes,
-    # )
-    # 
-    # return CheckoutCreateOrderResponse(
-    #     order_id=order.order_id,
-    #     seller_user_id=order.seller_user_id,
-    #     buyer_user_id=order.buyer_user_id,
-    #     clothing_id=order.clothing_id,
-    #     amount_total=order.amount_total,
-    #     currency=order.currency,
-    #     order_status=order.order_status,
-    #     created_at=order.created_at,
-    # )
+
+    return CheckoutCreateOrderResponse(
+        order_id=order.order_id,
+        seller_user_id=order.seller_user_id,
+        buyer_user_id=order.buyer_user_id,
+        clothing_id=order.clothing_id,
+        amount_total=order.amount_total,
+        currency=order.currency,
+        order_status=order.order_status,
+        created_at=order.created_at,
+    )
 
 
 @router.post("/create-payment-intent", response_model=CreatePaymentIntentResponse)
