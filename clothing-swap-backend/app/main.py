@@ -8,7 +8,7 @@ from app.routes.auth import router
 
 from .config import settings
 from .database import init_db
-from .api.v1 import auth, users, clothing, materials, brands, swaps, impact, stats, payment, shipping, sales, checkout, orders, reviews, cart
+from .api.v1 import auth, users, clothing, materials, brands, swaps, impact, stats, payment, shipping, sales, checkout, orders, reviews, cart, stripe_connect
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -203,6 +203,7 @@ app.include_router(checkout.router, prefix="/api/v1", tags=["checkout"])
 app.include_router(orders.router, prefix="/api/v1", tags=["orders"])
 app.include_router(reviews.router, prefix="/api/v1/reviews", tags=["reviews"])
 app.include_router(cart.router, prefix="/api/v1/cart", tags=["cart"])
+app.include_router(stripe_connect.router, prefix="/api/v1", tags=["stripe-connect"])
 
 
 

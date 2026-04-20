@@ -274,6 +274,10 @@ def checkout_cart(
         db.add(sale)
         db.flush()  # Get sale_id without committing
 
+        # Look up seller's Stripe Connect account
+        seller = db.query(User).filter(User.user_id == clothing.owner_user_id).first()
+        seller_stripe_id = seller.stripe_account_id if seller else None
+
         # Create Order record (populates orders table)
         # Platform fee = Stripe cost + ShipEngine label cost (net zero profit)
         platform_fee = (
@@ -285,6 +289,7 @@ def checkout_cart(
             buyer_user_id=user_id,
             seller_user_id=clothing.owner_user_id,
             clothing_id=clothing.clothing_id,
+            seller_stripe_account_id=seller_stripe_id,
             order_status="created",
             amount_total=price,
             seller_net=seller_net,
@@ -357,8 +362,8 @@ def complete_purchase(
         sale = db.query(Sale).filter(Sale.sale_id == sale_id).first()
         if not sale:
             continue  # Skip invalid IDs gracefully
-        if sale.buyer_id != user_id:
-            continue  # Only the buyer can complete their own purchase
+        if sale.buyer_id != user_id and sale.seller_id != user_id:
+            continue  # Only the buyer or seller involved in this sale can complete it
 
         # Update sale status
         if sale.status == "pending":

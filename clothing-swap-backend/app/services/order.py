@@ -319,6 +319,10 @@ def mark_order_shipped(
             detail=f"Order cannot be marked as shipped (status: {order.order_status})"
         )
     
+    # If transitioning from 'created', record payment timestamp
+    if order.order_status == "created":
+        order.payment_succeeded_at = datetime.utcnow()
+
     # Update order
     order.order_status = "shipped"
     order.shipped_at = datetime.utcnow()

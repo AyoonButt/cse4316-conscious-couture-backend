@@ -125,7 +125,15 @@ async def create_user_signup(user_info: UserCreate,db: Session = Depends(get_db)
         username=username,
         email= email,
         display_name=full_name,
-        password_hash=hashedpassword
+        password_hash=hashedpassword,
+        birth_date=user_info.birth_date,
+        address_line1=user_info.address_line1,
+        address_line2=user_info.address_line2,
+        phone_number=user_info.phone_number,
+        city=user_info.city,
+        state=user_info.state,
+        postal_code=user_info.postal_code,
+        country=user_info.country,
     )
     db.add(make_user)
     db.commit()
